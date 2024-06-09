@@ -1,11 +1,36 @@
 use bevy::prelude::*;
 
 #[derive(Component, Debug, Default)]
+pub struct Acc(Vec3);
+
+impl From<Vec3> for Acc {
+    fn from(value: Vec3) -> Self {
+        Self(value)
+    }
+}
+
+#[derive(Component, Debug, Default)]
 pub struct Velocity(pub Vec3);
 
 impl From<Vec3> for Velocity {
     fn from(value: Vec3) -> Self {
         Self(value)
+    }
+}
+
+#[derive(Bundle, Default)]
+pub struct MovingObj {
+    pub velocity: Velocity,
+    pub acc: Acc,
+    pub model: SceneBundle,
+}
+
+impl From<SceneBundle> for MovingObj {
+    fn from(model: SceneBundle) -> Self {
+        Self {
+            model,
+            ..Default::default()
+        }
     }
 }
 
