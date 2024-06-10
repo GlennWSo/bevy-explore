@@ -1,3 +1,4 @@
+pub mod assets;
 pub mod astroids;
 pub mod camera;
 pub mod movement;

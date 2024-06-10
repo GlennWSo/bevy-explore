@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use bevy::prelude::*;
 
 #[derive(Component, Debug, Default)]
@@ -15,6 +17,19 @@ pub struct Velocity(pub Vec3);
 impl From<Vec3> for Velocity {
     fn from(value: Vec3) -> Self {
         Self(value)
+    }
+}
+
+impl Deref for Velocity {
+    type Target = Vec3;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Velocity {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 

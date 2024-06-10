@@ -4,8 +4,9 @@ use std::ops::Range;
 
 use bevy::prelude::*;
 
-use rand::{self, Rng};
+use rand::Rng;
 
+use crate::assets::Assets;
 use crate::movement::MovingObj;
 
 const SPAWN_RANGE_X: Range<f32> = -25.0..25.;
@@ -45,7 +46,7 @@ fn spawn_astriod(
     mut cmd: Commands,
     time: Res<Time>,
     mut timer: ResMut<SpawnTimer>,
-    asset_server: Res<AssetServer>,
+    assets: Res<Assets>,
 ) {
     timer.tick(time.delta());
     if !timer.just_finished() {
@@ -64,7 +65,7 @@ fn spawn_astriod(
     let acc = (random_unit_vec(&mut rng) * ACC_SCALAR).into();
 
     let model = SceneBundle {
-        scene: asset_server.load("Planet.glb#Scene0"),
+        scene: assets.astriod.clone(),
         transform,
         ..Default::default()
     };

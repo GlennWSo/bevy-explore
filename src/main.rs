@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use learn_bevy::{
-    astroids::AstriodPlug, camera::CameraPlugin, movement::MovePlug, ship::ShipPlug, DebugPlug,
+    assets::AssetPlug, astroids::AstriodPlug, camera::CameraPlugin, movement::MovePlug,
+    ship::ShipPlug, DebugPlug,
 };
 
 fn main() {
@@ -10,6 +11,7 @@ fn main() {
             color: Color::default(),
             brightness: 750.,
         })
+        .add_plugins(AssetPlug)
         .add_plugins(ShipPlug)
         .add_plugins(AstriodPlug)
         .add_plugins(MovePlug)
