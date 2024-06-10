@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.13.0", features = ["wayland"] }
+rand = "0.8.5"

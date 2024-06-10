@@ -36,6 +36,12 @@ impl From<SceneBundle> for MovingObj {
 
 pub struct MovePlug;
 
+fn update_velocity(mut q: Query<(&Acc, &mut Velocity)>, time: Res<Time>) {
+    for (acc, mut velocity) in q.iter_mut() {
+        velocity.0 += acc.0 * time.delta_seconds();
+    }
+}
+
 fn update_position(mut q: Query<(&Velocity, &mut Transform)>, time: Res<Time>) {
     for (velocity, mut position) in q.iter_mut() {
         position.translation += velocity.0 * time.delta_seconds();
@@ -44,6 +50,6 @@ fn update_position(mut q: Query<(&Velocity, &mut Transform)>, time: Res<Time>) {
 
 impl Plugin for MovePlug {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, update_position);
+        app.add_systems(Update, (update_velocity, update_position));
     }
 }
