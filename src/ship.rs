@@ -3,6 +3,7 @@ use bevy::prelude::*;
 
 use crate::assets::Assets;
 use crate::collide::Collider;
+use crate::far::Keep;
 use crate::movement::{MovingObj, Velocity};
 
 const START_TRANSLATION: Vec3 = Vec3::new(0., 0., -20.);
@@ -73,7 +74,7 @@ fn spawn_spaceship(mut cmds: Commands, assets: Res<Assets>) {
         acc: Vec3::ZERO.into(),
         collider: crate::collide::Collider::new(4.0),
     };
-    let ship = (obj, SpaceShip, MissleLauncher::new(0.05));
+    let ship = (obj, SpaceShip, MissleLauncher::new(0.05), Keep);
     cmds.spawn(ship);
 }
 

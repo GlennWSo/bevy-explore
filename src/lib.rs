@@ -2,6 +2,7 @@ pub mod assets;
 pub mod astroids;
 pub mod camera;
 pub mod collide;
+pub mod far;
 pub mod movement;
 pub mod ship;
 
