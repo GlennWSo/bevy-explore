@@ -86,6 +86,7 @@ struct MissleLauncher {
 }
 
 impl MissleLauncher {
+    const START_RATE: f32 = 0.02;
     /// fire rate from seconds interval
     fn new(cooldown: f32) -> Self {
         assert!(cooldown >= 0.0);
@@ -109,6 +110,12 @@ impl MissleLauncher {
                 }
             }
         }
+    }
+}
+
+impl Default for MissleLauncher {
+    fn default() -> Self {
+        Self::new(Self::START_RATE)
     }
 }
 
