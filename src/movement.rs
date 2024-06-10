@@ -2,6 +2,8 @@ use std::ops::{Deref, DerefMut};
 
 use bevy::prelude::*;
 
+use crate::collide::Collider;
+
 #[derive(Component, Debug, Default)]
 pub struct Acc(Vec3);
 
@@ -33,21 +35,22 @@ impl DerefMut for Velocity {
     }
 }
 
-#[derive(Bundle, Default)]
+#[derive(Bundle)]
 pub struct MovingObj {
     pub velocity: Velocity,
     pub acc: Acc,
     pub model: SceneBundle,
+    pub collider: Collider,
 }
 
-impl From<SceneBundle> for MovingObj {
-    fn from(model: SceneBundle) -> Self {
-        Self {
-            model,
-            ..Default::default()
-        }
-    }
-}
+// impl From<SceneBundle> for MovingObj {
+//     fn from(model: SceneBundle) -> Self {
+//         Self {
+//             model,
+//             ..Default::default()
+//         }
+//     }
+// }
 
 pub struct MovePlug;
 

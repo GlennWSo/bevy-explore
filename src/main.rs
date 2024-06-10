@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use learn_bevy::{
-    assets::AssetPlug, astroids::AstriodPlug, camera::CameraPlugin, movement::MovePlug,
-    ship::ShipPlug, DebugPlug,
+    assets::AssetPlug, astroids::AstriodPlug, camera::CameraPlugin, collide::CollidePlugin,
+    movement::MovePlug, ship::ShipPlug, DebugPlug,
 };
 
 fn main() {
@@ -16,6 +16,7 @@ fn main() {
         .add_plugins(AstriodPlug)
         .add_plugins(MovePlug)
         // .add_plugins(DebugPlug)
+        .add_plugins(CollidePlugin)
         .add_plugins(CameraPlugin)
         .add_plugins(DefaultPlugins)
         .run();

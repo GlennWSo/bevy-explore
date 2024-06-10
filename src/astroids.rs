@@ -7,6 +7,7 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::assets::Assets;
+use crate::collide::Collider;
 use crate::movement::MovingObj;
 
 const SPAWN_RANGE_X: Range<f32> = -25.0..25.;
@@ -17,6 +18,11 @@ const ACC_SCALAR: f32 = 1.0;
 
 #[derive(Component, Debug)]
 struct Astroid;
+
+impl Astroid {
+    const ROTATION_SPEED: f32 = 1.0;
+    const RADIUS: f32 = 2.5;
+}
 
 #[derive(Resource, Debug)]
 struct SpawnTimer(Timer);
@@ -40,6 +46,13 @@ fn random_unit_vec(rng: &mut impl Rng) -> Vec3 {
     let y = 0.0;
     let z = rng.gen_range(-1.0..1.0);
     Vec3::new(x, y, z).normalize_or_zero()
+}
+
+fn rotate_astriods(mut q: Query<&mut Transform, With<Astroid>>, time: Res<Time>) {
+    let rot = Astroid::ROTATION_SPEED * time.delta_seconds();
+    for mut trans in q.iter_mut() {
+        trans.rotate_local_z(rot);
+    }
 }
 
 fn spawn_astriod(
@@ -69,15 +82,27 @@ fn spawn_astriod(
         transform,
         ..Default::default()
     };
+    let collider = Collider::new(Astroid::RADIUS);
     let rock = MovingObj {
         model,
         velocity,
         acc,
+        collider,
     };
 
     cmd.spawn((rock, Astroid));
 }
 
+fn handle_astriod_collisions(mut cmds: Commands, q: Query<(Entity, &Collider), With<Astroid>>) {
+    for (ent, collider) in q.iter() {
+        for &collide_ent in collider.colliding_entities.iter() {
+            if q.get(collide_ent).is_ok() {
+                continue;
+            }
+            cmds.entity(ent).despawn_recursive();
+        }
+    }
+}
 pub struct AstriodPlug;
 
 impl AstriodPlug {
@@ -89,7 +114,9 @@ impl Plugin for AstriodPlug {
     fn build(&self, app: &mut App) {
         let timer = Timer::from_seconds(Self::SPAWN_TIMER, TimerMode::Repeating);
         let timer = SpawnTimer(timer);
-        app.insert_resource(timer);
-        app.add_systems(Update, spawn_astriod);
+        app.insert_resource(timer)
+            .add_systems(Update, spawn_astriod)
+            .add_systems(Update, rotate_astriods)
+            .add_systems(Update, handle_astriod_collisions);
     }
 }
