@@ -15,7 +15,7 @@ fn main() {
         .add_plugins(ShipPlug)
         .add_plugins(AstriodPlug)
         .add_plugins(MovePlug)
-        .add_plugins(DebugPlug)
+        // .add_plugins(DebugPlug)
         .add_plugins(CameraPlugin)
         .add_plugins(DefaultPlugins)
         .run();
