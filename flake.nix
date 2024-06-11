@@ -64,6 +64,21 @@
               --set LD_LIBRARY_PATH ${LIBS}
           '';
         };
+
+        wasmBuild = craneLib.buildPackage {
+          inherit src cargoArtifacts buildInputs;
+
+          cargoExtraArgs = "--target wasm32-unknown-unknown";
+          doCheck = false;
+          postFixup = ''
+            cp ${./www/index.html} $out/bin/index.html
+            cp -r assets $out/bin/
+            wasm-bindgen --no-typescript --target web \
+              --out-dir $out/bin/ \
+              --out-name game \
+              $out/bin/${wasmBuild.pname}.wasm
+          '';
+        };
         libs = with pkgs; [
           alsaLib
           udev
@@ -101,8 +116,11 @@
         '';
       in
         with pkgs; {
-          packages.default = nixCrate;
-          packages.deps = cargoArtifacts;
+          packages = {
+            inherit wasmBuild;
+            default = nixCrate;
+            deps = cargoArtifacts;
+          };
           devShells.default = mkShell {
             inherit LIBS;
             name = "rust graphics env";
