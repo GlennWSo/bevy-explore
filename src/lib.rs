@@ -6,6 +6,7 @@ pub mod far;
 pub mod movement;
 pub mod schedule;
 pub mod ship;
+pub mod state;
 
 use bevy::prelude::*;
 use schedule::InGameSet;
