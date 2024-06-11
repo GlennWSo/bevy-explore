@@ -1,5 +1,23 @@
 use bevy::{prelude::*, utils::HashMap};
 
+use crate::{astroids::Astroid, schedule::InGameSet, ship::SpaceShip};
+
+pub struct CollidePlugin;
+
+impl Plugin for CollidePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            Update,
+            detect_collisions.in_set(InGameSet::CollisionDetection),
+        )
+        .add_systems(
+            Update,
+            (handle_collisions::<SpaceShip>, handle_collisions::<Astroid>)
+                .in_set(InGameSet::Despawn),
+        );
+    }
+}
+
 #[derive(Component, Default)]
 pub struct Collider {
     pub radius: f32,
@@ -43,10 +61,13 @@ fn detect_collisions(mut q: Query<(Entity, &GlobalTransform, &mut Collider)>) {
     }
 }
 
-pub struct CollidePlugin;
-
-impl Plugin for CollidePlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, detect_collisions);
+fn handle_collisions<T: Component>(mut cmds: Commands, q: Query<(Entity, &Collider), With<T>>) {
+    for (ent, collider) in q.iter() {
+        for &collide_ent in collider.colliding_entities.iter() {
+            if q.get(collide_ent).is_ok() {
+                continue;
+            }
+            cmds.entity(ent).despawn_recursive();
+        }
     }
 }

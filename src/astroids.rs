@@ -9,15 +9,33 @@ use rand::Rng;
 use crate::assets::Assets;
 use crate::collide::Collider;
 use crate::movement::MovingObj;
+use crate::schedule::InGameSet;
 
 const SPAWN_RANGE_X: Range<f32> = -25.0..25.;
 const SPAWN_RANGE_Y: Range<f32> = 0.0..25.;
 
 const VELOCITY_SCALAR: f32 = 5.0;
 const ACC_SCALAR: f32 = 1.0;
+pub struct AstriodPlug;
+
+impl AstriodPlug {
+    /// spawn interval in seconds
+    const SPAWN_TIMER: f32 = 1.0;
+}
+
+impl Plugin for AstriodPlug {
+    fn build(&self, app: &mut App) {
+        let timer = Timer::from_seconds(Self::SPAWN_TIMER, TimerMode::Repeating);
+        let timer = SpawnTimer(timer);
+        app.insert_resource(timer).add_systems(
+            Update,
+            (rotate_astriods, spawn_astriod).in_set(InGameSet::EntityUpdate),
+        );
+    }
+}
 
 #[derive(Component, Debug)]
-struct Astroid;
+pub struct Astroid;
 
 impl Astroid {
     const ROTATION_SPEED: f32 = 1.0;
@@ -91,32 +109,4 @@ fn spawn_astriod(
     };
 
     cmd.spawn((rock, Astroid));
-}
-
-fn handle_astriod_collisions(mut cmds: Commands, q: Query<(Entity, &Collider), With<Astroid>>) {
-    for (ent, collider) in q.iter() {
-        for &collide_ent in collider.colliding_entities.iter() {
-            if q.get(collide_ent).is_ok() {
-                continue;
-            }
-            cmds.entity(ent).despawn_recursive();
-        }
-    }
-}
-pub struct AstriodPlug;
-
-impl AstriodPlug {
-    /// spawn interval in seconds
-    const SPAWN_TIMER: f32 = 1.0;
-}
-
-impl Plugin for AstriodPlug {
-    fn build(&self, app: &mut App) {
-        let timer = Timer::from_seconds(Self::SPAWN_TIMER, TimerMode::Repeating);
-        let timer = SpawnTimer(timer);
-        app.insert_resource(timer)
-            .add_systems(Update, spawn_astriod)
-            .add_systems(Update, rotate_astriods)
-            .add_systems(Update, handle_astriod_collisions);
-    }
 }
