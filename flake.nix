@@ -21,7 +21,9 @@
           config.allowUnfree = true;
         };
 
-        rust = pkgs.rust-bin.nightly.latest.default;
+        rust = pkgs.rust-bin.nightly.latest.default.override {
+          targets = ["wasm32-unknown-unknown"];
+        };
 
         libs = with pkgs; [
           alsaLib
@@ -40,6 +42,7 @@
             vulkan-headers
             vulkan-loader
             vulkan-validation-layers
+            wasm-bindgen-cli
           ]
           ++ libs;
 
