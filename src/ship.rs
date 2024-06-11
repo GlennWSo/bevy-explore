@@ -2,8 +2,9 @@ use bevy::prelude::*;
 // use bevy::input::InputSystem
 
 use crate::assets::Assets;
-use crate::collide::Collider;
+use crate::collide::{Collider, CollisionDamage};
 use crate::far::Keep;
+use crate::health::Health;
 use crate::movement::{MovingObj, Velocity};
 use crate::schedule::InGameSet;
 
@@ -11,6 +12,8 @@ const START_TRANSLATION: Vec3 = Vec3::new(0., 0., -20.);
 const SHIP_SPEED: f32 = 25.0;
 const SHIP_ROTATION_SPEED: f32 = 2.5;
 const SHIP_ROLL_SPEED: f32 = 2.5;
+const SHIP_HEALTH: i32 = 100;
+const SHIP_COLLISION_DAMAGE: i32 = 30;
 
 pub struct ShipPlug;
 
@@ -38,6 +41,8 @@ pub struct Missle;
 impl Missle {
     const SPEED: f32 = 50.0;
     const FORWARD_OFFSET: f32 = 7.5;
+    const HEALTH: i32 = 1;
+    const DAMAGE: i32 = 10;
 }
 #[derive(Component)]
 struct MissleLauncher {
@@ -145,7 +150,14 @@ fn spawn_spaceship(mut cmds: Commands, assets: Res<Assets>) {
         acc: Vec3::ZERO.into(),
         collider: crate::collide::Collider::new(4.0),
     };
-    let ship = (obj, SpaceShip, MissleLauncher::new(0.05), Keep);
+    let ship = (
+        obj,
+        SpaceShip,
+        MissleLauncher::new(0.05),
+        Keep,
+        Health(SHIP_HEALTH),
+        CollisionDamage(SHIP_COLLISION_DAMAGE),
+    );
     cmds.spawn(ship);
 }
 
@@ -198,6 +210,8 @@ fn ship_weapon_ctrl(
             collider: Collider::new(0.1),
         },
         Missle,
+        Health(Missle::HEALTH),
+        CollisionDamage(Missle::DAMAGE),
     );
     cmds.spawn(missle);
 }

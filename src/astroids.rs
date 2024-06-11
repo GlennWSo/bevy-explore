@@ -8,6 +8,8 @@ use rand::Rng;
 
 use crate::assets::Assets;
 use crate::collide::Collider;
+use crate::collide::CollisionDamage;
+use crate::health::Health;
 use crate::movement::MovingObj;
 use crate::schedule::InGameSet;
 
@@ -40,6 +42,8 @@ pub struct Astroid;
 impl Astroid {
     const ROTATION_SPEED: f32 = 1.0;
     const RADIUS: f32 = 2.5;
+    const HEALTH: i32 = 40;
+    const DAMAGE: i32 = 20;
 }
 
 #[derive(Resource, Debug)]
@@ -101,12 +105,18 @@ fn spawn_astriod(
         ..Default::default()
     };
     let collider = Collider::new(Astroid::RADIUS);
-    let rock = MovingObj {
+    let obj = MovingObj {
         model,
         velocity,
         acc,
         collider,
     };
 
-    cmd.spawn((rock, Astroid));
+    let rock = (
+        obj,
+        Astroid,
+        Health(Astroid::HEALTH),
+        CollisionDamage(Astroid::DAMAGE),
+    );
+    cmd.spawn(rock);
 }

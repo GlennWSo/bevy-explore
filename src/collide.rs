@@ -1,20 +1,62 @@
+use std::ops::Deref;
+
 use bevy::{prelude::*, utils::HashMap};
 
-use crate::{astroids::Astroid, schedule::InGameSet, ship::SpaceShip};
+use crate::{
+    astroids::Astroid,
+    health::Health,
+    schedule::InGameSet,
+    ship::{Missle, SpaceShip},
+};
 
 pub struct CollidePlugin;
 
 impl Plugin for CollidePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            detect_collisions.in_set(InGameSet::CollisionDetection),
-        )
-        .add_systems(
-            Update,
-            (handle_collisions::<SpaceShip>, handle_collisions::<Astroid>)
-                .in_set(InGameSet::Despawn),
-        );
+        app.add_event::<CollisionEvent>()
+            .add_systems(
+                Update,
+                detect_collisions.in_set(InGameSet::CollisionDetection),
+            )
+            .add_systems(
+                Update,
+                (
+                    (
+                        handle_collisions::<SpaceShip>,
+                        handle_collisions::<Astroid>,
+                        handle_collisions::<Missle>,
+                    ),
+                    apply_collision_dmg,
+                )
+                    .chain()
+                    .in_set(InGameSet::Despawn),
+            );
+    }
+}
+
+#[derive(Component)]
+pub struct CollisionDamage(pub i32);
+
+impl Deref for CollisionDamage {
+    type Target = i32;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+#[derive(Event)]
+struct CollisionEvent {
+    entity: Entity,
+    collided_with: Entity,
+}
+
+impl CollisionEvent {
+    pub fn new(entity: Entity, collided_with: Entity) -> Self {
+        Self {
+            entity,
+            collided_with,
+        }
     }
 }
 
@@ -61,13 +103,39 @@ fn detect_collisions(mut q: Query<(Entity, &GlobalTransform, &mut Collider)>) {
     }
 }
 
-fn handle_collisions<T: Component>(mut cmds: Commands, q: Query<(Entity, &Collider), With<T>>) {
+fn handle_collisions<T: Component>(
+    mut writer: EventWriter<CollisionEvent>,
+    q: Query<(Entity, &Collider), With<T>>,
+) {
     for (ent, collider) in q.iter() {
-        for &collide_ent in collider.colliding_entities.iter() {
-            if q.get(collide_ent).is_ok() {
+        for &collide_envent in collider.colliding_entities.iter() {
+            if q.get(collide_envent).is_ok() {
                 continue;
             }
-            cmds.entity(ent).despawn_recursive();
+            // send collision event
+            writer.send(CollisionEvent::new(ent, collide_envent));
         }
+    }
+}
+
+fn apply_collision_dmg(
+    mut reader: EventReader<CollisionEvent>,
+    mut health_q: Query<&mut Health>,
+    dmg_q: Query<&CollisionDamage>,
+) {
+    for &CollisionEvent {
+        entity,
+        collided_with,
+    } in reader.read()
+    {
+        let Ok(mut health) = health_q.get_mut(entity) else {
+            continue;
+        };
+
+        let Ok(dmg) = dmg_q.get(collided_with) else {
+            continue;
+        };
+
+        **health -= **dmg;
     }
 }

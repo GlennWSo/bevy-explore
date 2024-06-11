@@ -3,6 +3,7 @@ pub mod astroids;
 pub mod camera;
 pub mod collide;
 pub mod far;
+pub mod health;
 pub mod movement;
 pub mod schedule;
 pub mod ship;
