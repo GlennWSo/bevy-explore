@@ -3,10 +3,11 @@ use bevy::prelude::*;
 
 use crate::assets::Assets;
 use crate::collide::{Collider, CollisionDamage};
-use crate::far::Keep;
+use crate::despawn::Keep;
 use crate::health::Health;
 use crate::movement::{MovingObj, Velocity};
 use crate::schedule::InGameSet;
+use crate::state::GameState;
 
 const START_TRANSLATION: Vec3 = Vec3::new(0., 0., -20.);
 const SHIP_SPEED: f32 = 25.0;
@@ -20,12 +21,14 @@ pub struct ShipPlug;
 impl Plugin for ShipPlug {
     fn build(&self, app: &mut App) {
         app.add_systems(PostStartup, spawn_spaceship);
+        app.add_systems(OnExit(GameState::GameOver), spawn_spaceship);
         app.add_systems(
             Update,
             (ship_movement_ctrl, ship_weapon_ctrl, shield_ctrl)
                 .chain()
                 .in_set(InGameSet::UI),
-        );
+        )
+        .add_systems(Update, end_player);
     }
 }
 
@@ -214,4 +217,10 @@ fn ship_weapon_ctrl(
         CollisionDamage(Missle::DAMAGE),
     );
     cmds.spawn(missle);
+}
+
+fn end_player(mut next: ResMut<NextState<GameState>>, q: Query<(), With<SpaceShip>>) {
+    if q.get_single().is_err() {
+        next.set(GameState::GameOver)
+    }
 }

@@ -13,6 +13,7 @@ pub struct StatePlugin;
 impl Plugin for StatePlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<GameState>()
+            .add_systems(Update, restart_game.run_if(in_state(GameState::GameOver)))
             .add_systems(Update, toggle_game_state);
     }
 }
@@ -30,4 +31,8 @@ fn toggle_game_state(
             GameState::GameOver => todo!(),
         }
     }
+}
+
+fn restart_game(mut next_state: ResMut<NextState<GameState>>) {
+    next_state.set(GameState::Play);
 }

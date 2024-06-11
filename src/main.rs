@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use learn_bevy::{
     assets::AssetPlug, astroids::AstriodPlug, camera::CameraPlugin, collide::CollidePlugin,
-    far::FarPlugin, health::HealthPlugin, movement::MovePlug, schedule::SchedulePlugin,
+    despawn::DespawnPlugin, health::HealthPlugin, movement::MovePlug, schedule::SchedulePlugin,
     ship::ShipPlug, state::StatePlugin, DebugPlug,
 };
 
@@ -20,7 +20,7 @@ fn main() {
         .add_plugins(AstriodPlug)
         .add_plugins(MovePlug)
         // .add_plugins(DebugPlug)
-        .add_plugins(FarPlugin)
+        .add_plugins(DespawnPlugin)
         .add_plugins(CollidePlugin)
         .add_plugins(CameraPlugin)
         .add_plugins(DefaultPlugins)

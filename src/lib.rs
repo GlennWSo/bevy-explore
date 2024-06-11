@@ -2,7 +2,7 @@ pub mod assets;
 pub mod astroids;
 pub mod camera;
 pub mod collide;
-pub mod far;
+pub mod despawn;
 pub mod health;
 pub mod movement;
 pub mod schedule;
