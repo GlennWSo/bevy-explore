@@ -90,7 +90,6 @@ fn shield_ctrl(
 
     if input.pressed(KeyCode::Tab) {
         cmds.entity(ship).insert(Shield);
-        println!("Adding shields");
     }
 }
 
