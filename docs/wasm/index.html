@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <style>
+    #game {
+      width: 100% !important;
+      height: auto !important;
+    }
+  </style>
+</head>
+
+<body style="margin: 0px;">
+  <script type="module">
+    import init from './game.js'
+
+    init().catch((error) => {
+      if (!error.message.startsWith("Using exceptions for control flow, don't mind me. This isn't actually an error!")) {
+        throw error;
+      }
+    });
+  </script>
+
+
+  <canvas id="game" width="480" height="480"></canvas>
+</body>
+
+</html>

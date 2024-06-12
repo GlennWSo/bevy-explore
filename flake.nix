@@ -94,9 +94,10 @@
         };
         wasmPublish = pkgs.writeShellScriptBin "publish" ''
           rm -rf docs/*
-          mkdir docs/assets -p
-          install $(find result/bin/ -maxdepth 1 -type f ) docs/
-          install $(find result/bin/assets -maxdepth 1 -type f ) docs/assets/
+          mkdir docs/wasm/assets -p
+          install result/bin/index.html docs/
+          install $(find result/bin/wasm/ -maxdepth 1 -type f ) docs/wasm/
+          install $(find result/bin/wasm/assets -maxdepth 1 -type f ) docs/wasm/assets/
         '';
         wasmServe = with pkgs;
           writeShellScriptBin "serve" ''
