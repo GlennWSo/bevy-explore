@@ -195,7 +195,9 @@ fn ship_weapon_ctrl(
     }
 
     let mut transform = ship_transform.clone();
+    let velocity = (-transform.forward() * Missle::SPEED + **ship_velocity).into();
     transform.translation -= Missle::FORWARD_OFFSET * *ship_transform.forward();
+    transform.rotate_local_y(90.0_f32.to_radians());
 
     let scene = assets.missles.clone();
     let model = SceneBundle {
@@ -203,7 +205,6 @@ fn ship_weapon_ctrl(
         transform,
         ..Default::default()
     };
-    let velocity = (-transform.forward() * Missle::SPEED + **ship_velocity).into();
 
     let missle = (
         MovingObj {
