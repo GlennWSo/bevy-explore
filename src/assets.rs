@@ -13,7 +13,7 @@ fn load_assets(mut assets: ResMut<Assets>, asset_server: Res<AssetServer>) {
     *assets = Assets {
         astriod: asset_server.load("Planet.glb#Scene0"),
         ship: asset_server.load("Spaceship.glb#Scene0"),
-        missles: asset_server.load("Bullets Pickup.glb#Scene0"),
+        missles: asset_server.load("BulletsPickup.glb#Scene0"),
     }
 }
 

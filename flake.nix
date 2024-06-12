@@ -55,6 +55,13 @@
 
           # cargoExtraArgs = "--target thumbv7em-none-eabihf";
         };
+        wasmArtifacts = craneLib.buildDepsOnly {
+          inherit src buildInputs;
+          version = "0.1.0";
+
+          cargoExtraArgs = "--target wasm32-unknown-unknown";
+          doCheck = false;
+        };
 
         nixCrate = craneLib.buildPackage {
           inherit src cargoArtifacts buildInputs;
@@ -66,8 +73,8 @@
         };
 
         wasmBuild = craneLib.buildPackage {
-          inherit src cargoArtifacts buildInputs;
-
+          inherit src buildInputs;
+          cargoArtifacts = wasmArtifacts;
           cargoExtraArgs = "--target wasm32-unknown-unknown";
           doCheck = false;
           postFixup = ''
@@ -79,6 +86,16 @@
               $out/bin/${wasmBuild.pname}.wasm
           '';
         };
+        wasmPublish = pkgs.writeShellScriptBin "publish" ''
+          rm -rf docs/*
+          mkdir docs/assets -p
+          install $(find result/bin/ -maxdepth 1 -type f ) docs/
+          install $(find result/bin/assets -maxdepth 1 -type f ) docs/assets/
+        '';
+        wasmServe = with pkgs;
+          writeShellScriptBin "serve" ''
+            ${static-server}/bin/static-server $@ ${wasmBuild}/bin/
+          '';
         libs = with pkgs; [
           alsaLib
           udev
@@ -108,6 +125,9 @@
           gdb
           lldb
           rust-analyzer
+          wasmServe
+          wasmPublish
+          static-server
         ];
         LIBS = pkgs.lib.makeLibraryPath libs;
         run = pkgs.writeShellScriptBin "run" ''
@@ -117,7 +137,7 @@
       in
         with pkgs; {
           packages = {
-            inherit wasmBuild;
+            inherit wasmBuild wasmArtifacts wasmServe;
             default = nixCrate;
             deps = cargoArtifacts;
           };
