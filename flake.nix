@@ -78,12 +78,18 @@
           cargoExtraArgs = "--target wasm32-unknown-unknown";
           doCheck = false;
           postFixup = ''
-            cp ${./www/index.html} $out/bin/index.html
-            cp -r assets $out/bin/
+            mkdir $out/bin/wasm
+            cp -r assets $out/bin/wasm/
+
+            cd $out/bin
+            cp ${./www/index.html} index.html
+            cp ${./www/wasm/index.html} wasm/index.html
+
+            mv ${wasmBuild.pname}.wasm wasm/
             wasm-bindgen --no-typescript --target web \
-              --out-dir $out/bin/ \
+              --out-dir wasm/ \
               --out-name game \
-              $out/bin/${wasmBuild.pname}.wasm
+              wasm/${wasmBuild.pname}.wasm
           '';
         };
         wasmPublish = pkgs.writeShellScriptBin "publish" ''
@@ -125,6 +131,7 @@
           gdb
           lldb
           rust-analyzer
+          vscode-langservers-extracted
           wasmServe
           wasmPublish
           static-server

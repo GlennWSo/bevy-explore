@@ -1,17 +1,45 @@
 <!doctype html>
 <html lang="en">
 
-<body style="margin: 0px;">
-  <script type="module">
-    import init from './game.js'
+<head>
+  <style>
+    .wlimit {
+      width: 800px;
+    }
 
-    init().catch((error) => {
-      if (!error.message.startsWith("Using exceptions for control flow, don't mind me. This isn't actually an error!")) {
-        throw error;
-      }
-    });
-  </script>
+    .game iframe {
+      margin-top: 10px;
+      border: 0;
+      box-sizing: border-box;
+      max-height: 100%;
+      max-width: 100%;
+      min-height: 100%;
+      min-width: 100%;
+    }
+  </style>
+
+</head>
+
+
+<body style="margin: 0px;">
+  <div id="main" class="main wlimit">
+    <div data-width="768" style="height: 600px;" data-height="600" class="game">
+      <iframe src="wasm/index.html" allowfullscreen="true" msallowfullscreen="true" scrolling="no"
+        webkitallowfullscreen="true"
+        allow="autoplay; fullscreen *; geolocation; microphone; camera; midi; monetization; xr-spatial-tracking; gamepad; gyroscope; accelerometer; xr; cross-origin-isolated"
+        mozallowfullscreen="true" id="game_drop" allowtransparency="true" frameborder="0">
+      </iframe>
+    </div>
+
+    <div data-width="768" style="height: 600;" data-height="600" class="game">
+      <iframe src="wasm/index.html" allowfullscreen="true" msallowfullscreen="true" scrolling="no"
+        webkitallowfullscreen="true"
+        allow="autoplay; fullscreen *; geolocation; microphone; camera; midi; monetization; xr-spatial-tracking; gamepad; gyroscope; accelerometer; xr; cross-origin-isolated"
+        mozallowfullscreen="true" id="game_drop" allowtransparency="true" frameborder="0">
+      </iframe>
+    </div>
+  </div>
 </body>
+<!-- src="https://html-classic.itch.zone/html/10647770/index.html" -->
 
 </html>
-
