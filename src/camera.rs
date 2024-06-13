@@ -20,16 +20,9 @@ fn fallow_player(
     let camera = q.get_single_mut();
     let player = q_player.get_single();
 
-    match (camera, player) {
-        (Ok(mut camera), Ok(player)) => {
-            camera.translation[0] = player.translation[0];
-            camera.translation[2] = player.translation[2];
-        }
-        _ => (),
-        (Ok(_), Err(_)) => todo!(),
-        (Err(_), Ok(_)) => todo!(),
-        (Err(_), Err(_)) => todo!(),
-        // _ => {},/// player or camera does not exist
+    if let (Ok(mut camera), Ok(player)) = (camera, player) {
+        camera.translation[0] = player.translation[0];
+        camera.translation[2] = player.translation[2];
     }
 }
 

@@ -37,7 +37,3 @@ impl Plugin for SchedulePlugin {
         );
     }
 }
-
-fn derp() -> bool {
-    false
-}
