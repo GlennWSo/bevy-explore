@@ -17,7 +17,7 @@ fn fallow_player(
     mut q: Query<&mut Transform, With<Camera>>,
     q_player: Query<&Transform, (Without<Camera>, With<SpaceShip>)>,
 ) {
-    let mut camera = q.get_single_mut();
+    let camera = q.get_single_mut();
     let player = q_player.get_single();
 
     match (camera, player) {

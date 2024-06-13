@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use learn_bevy::{
     assets::AssetPlug, astroids::AstriodPlug, camera::CameraPlugin, collide::CollidePlugin,
     despawn::DespawnPlugin, health::HealthPlugin, movement::MovePlug, schedule::SchedulePlugin,
-    ship::ShipPlug, state::StatePlugin, DebugPlug,
+    ship::ShipPlug, state::StatePlugin,
 };
 
 fn main() {

@@ -1,9 +1,6 @@
-use std::{
-    fmt,
-    ops::{Deref, DerefMut},
-};
+use std::ops::{Deref, DerefMut};
 
-use bevy::{audio::AudioPlugin, prelude::*};
+use bevy::prelude::*;
 
 use crate::assets::Assets;
 use crate::schedule::InGameSet;
@@ -21,15 +18,12 @@ fn despawn_dead(mut cmds: Commands, q: Query<(Entity, &Health)>, assets: Res<Ass
         if *life > 0 {
             continue;
         }
-        match death_cry {
-            DeathCry::Pop => {
-                let sound = AudioBundle {
-                    source: assets.pop.clone(),
-                    settings: PlaybackSettings::DESPAWN,
-                };
-                cmds.spawn(sound);
-            }
-            _ => (),
+        if let DeathCry::Pop = death_cry {
+            let sound = AudioBundle {
+                source: assets.pop.clone(),
+                settings: PlaybackSettings::DESPAWN,
+            };
+            cmds.spawn(sound);
         }
         cmds.entity(ent).despawn_recursive();
     }

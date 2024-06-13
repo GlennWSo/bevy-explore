@@ -1,5 +1,5 @@
 use bevy::audio::Volume;
-use bevy::{audio, prelude::*};
+use bevy::prelude::*;
 // use bevy::input::InputSystem
 
 use crate::assets::Assets;
@@ -198,7 +198,7 @@ fn ship_weapon_ctrl(
         }
     }
 
-    let mut transform = ship_transform.clone();
+    let mut transform = *ship_transform;
     let velocity = (-transform.forward() * Missle::SPEED + **ship_velocity).into();
     transform.translation -= Missle::FORWARD_OFFSET * *ship_transform.forward();
     transform.rotate_local_y(90.0_f32.to_radians());
