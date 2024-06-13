@@ -93,7 +93,7 @@ fn split_dead(
         if **health > 0 {
             continue;
         }
-        let objs = random_shards(&assets.astriod, transform, velocity);
+        let objs: [_; 5] = random_shards(&assets.astriod, transform, velocity);
         let rocks = objs.map(|obj| {
             (
                 obj,
@@ -110,20 +110,28 @@ fn split_dead(
     }
 }
 
-fn random_shards(
+/// create N objects moving away from input
+fn random_shards<const N: usize>(
     asset: &Handle<Scene>,
     mut transform: Transform,
     origin_velocity: Velocity,
-) -> [MovingObj; 3] {
+) -> [MovingObj; N] {
     let mut rng = rand::thread_rng();
-    let speed: f32 = rng.gen_range(2.5..10.);
+    let base_speed: f32 = rng.gen_range(2.5..10.);
 
-    let v1 = random_unit_vec(&mut rng) * speed;
-    let rot = Quat::from_rotation_y(120.0f32.to_radians());
-    let v2 = rot.mul_vec3(v1);
-    let v3 = rot.mul_vec3(v2);
+    let v1 = random_unit_vec(&mut rng) * base_speed;
+    let angle = 360.0 / N as f32;
+    // let rot = Quat::from_rotation_y(angle.to_radians());
 
-    let explosion = [v1, v2, v3];
+    let mut explosion = [v1; N];
+    for (lead, prev) in (1..N).zip(0..N) {
+        let prev = explosion[prev];
+        let speed_mod = rng.gen_range(0.8..1.25);
+        let angle_mod = rng.gen_range(0.8..1.25);
+        let rot = Quat::from_rotation_y(angle.to_radians() * angle_mod);
+        explosion[lead] = rot.mul_vec3(prev) * speed_mod;
+    }
+
     let factor = 0.7;
     transform.scale *= Vec3::ONE * factor;
 
