@@ -25,7 +25,7 @@ impl From<Vec3> for Acc {
     }
 }
 
-#[derive(Component, Debug, Default)]
+#[derive(Clone, Copy, Component, Debug, Default)]
 pub struct Velocity(pub Vec3);
 
 impl From<Vec3> for Velocity {

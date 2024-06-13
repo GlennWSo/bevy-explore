@@ -10,7 +10,9 @@ use crate::assets::Assets;
 use crate::collide::Collider;
 use crate::collide::CollisionDamage;
 use crate::health::Health;
+use crate::movement::Acc;
 use crate::movement::MovingObj;
+use crate::movement::Velocity;
 use crate::schedule::InGameSet;
 
 const SPAWN_RANGE_X: Range<f32> = -25.0..25.;
@@ -29,10 +31,12 @@ impl Plugin for AstriodPlug {
     fn build(&self, app: &mut App) {
         let timer = Timer::from_seconds(Self::SPAWN_TIMER, TimerMode::Repeating);
         let timer = SpawnTimer(timer);
-        app.insert_resource(timer).add_systems(
-            Update,
-            (rotate_astriods, spawn_astriod).in_set(InGameSet::EntityUpdate),
-        );
+        app.insert_resource(timer)
+            .add_systems(Update, split_dead.in_set(InGameSet::Spawn))
+            .add_systems(
+                Update,
+                (rotate_astriods, spawn_astriod).in_set(InGameSet::EntityUpdate),
+            );
     }
 }
 
@@ -75,6 +79,71 @@ fn rotate_astriods(mut q: Query<&mut Transform, With<Astroid>>, time: Res<Time>)
     for mut trans in q.iter_mut() {
         trans.rotate_local_z(rot);
     }
+}
+
+#[derive(Component)]
+struct Shard;
+
+fn split_dead(
+    mut cmds: Commands,
+    q: Query<(&Health, &Transform, &Velocity), (With<Astroid>, Without<Shard>)>,
+    assets: Res<Assets>,
+) {
+    for (health, &transform, &velocity) in q.iter() {
+        if **health > 0 {
+            continue;
+        }
+        let objs = random_shards(&assets.astriod, transform, velocity);
+        let rocks = objs.map(|obj| {
+            (
+                obj,
+                Shard,
+                Astroid,
+                Health(Astroid::HEALTH),
+                CollisionDamage(Astroid::DAMAGE),
+            )
+        });
+
+        for rock in rocks {
+            cmds.spawn(rock);
+        }
+    }
+}
+
+fn random_shards(
+    asset: &Handle<Scene>,
+    mut transform: Transform,
+    origin_velocity: Velocity,
+) -> [MovingObj; 3] {
+    let mut rng = rand::thread_rng();
+    let speed: f32 = rng.gen_range(2.5..10.);
+
+    let v1 = random_unit_vec(&mut rng) * speed;
+    let rot = Quat::from_rotation_y(120.0f32.to_radians());
+    let v2 = rot.mul_vec3(v1);
+    let v3 = rot.mul_vec3(v2);
+
+    let explosion = [v1, v2, v3];
+    let factor = 0.7;
+    transform.scale *= Vec3::ONE * factor;
+
+    explosion.map(|v| {
+        let model = SceneBundle {
+            scene: asset.clone(),
+            transform,
+            ..Default::default()
+        };
+        let collider = Collider::new(Astroid::RADIUS);
+        let velocity = (v + *origin_velocity).into();
+        let acc = Acc::default();
+
+        MovingObj {
+            model,
+            velocity,
+            acc,
+            collider,
+        }
+    })
 }
 
 fn spawn_astriod(

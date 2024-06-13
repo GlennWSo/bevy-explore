@@ -7,6 +7,7 @@ pub enum InGameSet {
     UI,
     EntityUpdate,
     CollisionDetection,
+    Spawn,
     Despawn,
 }
 
@@ -21,6 +22,7 @@ impl Plugin for SchedulePlugin {
                 // flush here
                 InGameSet::UI,
                 InGameSet::EntityUpdate,
+                InGameSet::Spawn,
                 InGameSet::CollisionDetection,
             )
                 .chain()

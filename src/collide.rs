@@ -29,7 +29,7 @@ impl Plugin for CollidePlugin {
                     apply_collision_dmg,
                 )
                     .chain()
-                    .in_set(InGameSet::Despawn),
+                    .in_set(InGameSet::EntityUpdate),
             );
     }
 }
