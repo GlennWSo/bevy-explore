@@ -5,6 +5,15 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+# Enable a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
+
 [dependencies]
-bevy = { version = "0.13.0", features = ["wayland"] }
+# dynamic_linking speeds builds alot but is best to remove before final release to enbale standalone 
+bevy = { version = "0.13.0", features = ["mp3", "wav", "wayland", "dynamic_linking"] }
 rand = "0.8.5"

@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{audio, prelude::*};
 // use bevy::input::InputSystem
 
 use crate::assets::Assets;
@@ -205,8 +205,19 @@ fn ship_weapon_ctrl(
         transform,
         ..Default::default()
     };
+    let settings = PlaybackSettings {
+        mode: bevy::audio::PlaybackMode::Once,
+        speed: 1.5,
+        ..Default::default()
+    };
+    let pew_sound = AudioBundle {
+        source: assets.laser.clone(),
+        settings,
+    };
+    // audio
 
     let missle = (
+        pew_sound,
         MovingObj {
             model,
             velocity,
