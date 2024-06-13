@@ -206,7 +206,7 @@ fn ship_weapon_ctrl(
         ..Default::default()
     };
     let settings = PlaybackSettings {
-        mode: bevy::audio::PlaybackMode::Once,
+        mode: bevy::audio::PlaybackMode::Despawn,
         speed: 1.5,
         ..Default::default()
     };
@@ -216,8 +216,8 @@ fn ship_weapon_ctrl(
     };
     // audio
 
+    cmds.spawn(pew_sound);
     let missle = (
-        pew_sound,
         MovingObj {
             model,
             velocity,
