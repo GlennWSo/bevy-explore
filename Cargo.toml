@@ -14,6 +14,9 @@ opt-level = 1
 opt-level = 3
 
 [dependencies]
-# dynamic_linking speeds builds alot but is best to remove before final release to enbale standalone 
-bevy = { version = "0.13.0", features = ["mp3", "wav", "wayland", "dynamic_linking"] }
 rand = "0.8.5"
+bevy = { version = "0.13.0", features = ["mp3", "wav", "wayland"] }
+
+# dynamic_linking speeds builds alot but is best to remove before final release to enbale standalone 
+[target.x86_64-unknown-linux-gnu.dependencies]
+bevy = { version = "0.13.0", features = ["dynamic_linking"] }
