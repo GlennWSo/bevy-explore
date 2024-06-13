@@ -133,7 +133,7 @@
           lldb
           rust-analyzer
           vscode-langservers-extracted
-          wasmServe
+          # wasmServe
           wasmPublish
           static-server
         ];
@@ -152,10 +152,13 @@
           devShells.default = mkShell {
             inherit LIBS;
             name = "rust graphics env";
-            WINIT_UNIX_BACKEND = "wayland";
             buildInputs = buildInputs ++ utils ++ [run];
+
+            RUST_LOG = "error";
+            WINIT_UNIX_BACKEND = "wayland";
             shellHook = ''
               echo Entering rust env!
+              echo log level [RUST_LOG]: $RUST_LOG
             '';
           };
         }
