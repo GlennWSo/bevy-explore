@@ -99,7 +99,10 @@ fn split_dead(
                 obj,
                 Shard,
                 Astroid,
-                Health(Astroid::HEALTH),
+                Health {
+                    life: Astroid::HEALTH,
+                    ..Default::default()
+                },
                 CollisionDamage(Astroid::DAMAGE),
             )
         });
@@ -192,7 +195,10 @@ fn spawn_astriod(
     let rock = (
         obj,
         Astroid,
-        Health(Astroid::HEALTH),
+        Health {
+            life: Astroid::HEALTH,
+            ..Default::default()
+        },
         CollisionDamage(Astroid::DAMAGE),
     );
     cmd.spawn(rock);

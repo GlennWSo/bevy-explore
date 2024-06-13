@@ -1,10 +1,11 @@
+use bevy::audio::Volume;
 use bevy::{audio, prelude::*};
 // use bevy::input::InputSystem
 
 use crate::assets::Assets;
 use crate::collide::{Collider, CollisionDamage};
 use crate::despawn::Keep;
-use crate::health::Health;
+use crate::health::{DeathCry, Health};
 use crate::movement::{MovingObj, Velocity};
 use crate::schedule::InGameSet;
 use crate::state::GameState;
@@ -158,7 +159,10 @@ fn spawn_spaceship(mut cmds: Commands, assets: Res<Assets>) {
         SpaceShip,
         MissleLauncher::new(0.05),
         Keep,
-        Health(SHIP_HEALTH),
+        Health {
+            life: SHIP_HEALTH,
+            ..Default::default()
+        },
         CollisionDamage(SHIP_COLLISION_DAMAGE),
     );
     cmds.spawn(ship);
@@ -208,6 +212,7 @@ fn ship_weapon_ctrl(
     let settings = PlaybackSettings {
         mode: bevy::audio::PlaybackMode::Despawn,
         speed: 1.5,
+        volume: Volume::new(0.3),
         ..Default::default()
     };
     let pew_sound = AudioBundle {
@@ -217,6 +222,8 @@ fn ship_weapon_ctrl(
     // audio
 
     cmds.spawn(pew_sound);
+    // let death_cry = Some(assets.pop.clone());
+    // assets.pop.as_any()
     let missle = (
         MovingObj {
             model,
@@ -225,7 +232,10 @@ fn ship_weapon_ctrl(
             collider: Collider::new(0.1),
         },
         Missle,
-        Health(Missle::HEALTH),
+        Health {
+            life: Missle::HEALTH,
+            death_cry: DeathCry::Pop,
+        },
         CollisionDamage(Missle::DAMAGE),
     );
     cmds.spawn(missle);
