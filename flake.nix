@@ -158,7 +158,7 @@
             WINIT_UNIX_BACKEND = "wayland";
             shellHook = ''
               echo Entering rust env!
-              echo log level [RUST_LOG]: $RUST_LOG
+              echo log level [RUST_LOG] set to: $RUST_LOG
             '';
           };
         }
