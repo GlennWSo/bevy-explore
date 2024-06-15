@@ -4,6 +4,7 @@ use std::ops::Range;
 
 use bevy::prelude::*;
 
+use rand::rngs::ThreadRng;
 use rand::Rng;
 
 use crate::assets::Assets;
@@ -14,9 +15,6 @@ use crate::movement::Acc;
 use crate::movement::MovingObj;
 use crate::movement::Velocity;
 use crate::schedule::InGameSet;
-
-const SPAWN_RANGE_X: Range<f32> = -25.0..25.;
-const SPAWN_RANGE_Y: Range<f32> = 0.0..25.;
 
 const VELOCITY_SCALAR: f32 = 5.0;
 const ACC_SCALAR: f32 = 1.0;
@@ -32,11 +30,9 @@ impl Plugin for AstriodPlug {
         let timer = Timer::from_seconds(Self::SPAWN_TIMER, TimerMode::Repeating);
         let timer = SpawnTimer(timer);
         app.insert_resource(timer)
+            .add_systems(Startup, init_rocks)
             .add_systems(Update, split_dead.in_set(InGameSet::Spawn))
-            .add_systems(
-                Update,
-                (rotate_astriods, spawn_astriod).in_set(InGameSet::EntityUpdate),
-            );
+            .add_systems(Update, rotate_astriods.in_set(InGameSet::EntityUpdate));
     }
 }
 
@@ -157,27 +153,56 @@ fn random_shards<const N: usize>(
     })
 }
 
-fn spawn_astriod(
-    mut cmd: Commands,
-    time: Res<Time>,
-    mut timer: ResMut<SpawnTimer>,
-    assets: Res<Assets>,
-) {
-    timer.tick(time.delta());
-    if !timer.just_finished() {
-        return;
+#[derive(Copy, Clone, Debug)]
+struct SpawnZone {
+    center: Vec3,
+    /// half sides
+    size: Vec3,
+}
+
+impl SpawnZone {
+    fn new(center: Vec3, size: Vec3) -> Self {
+        Self { center, size }
+    }
+    fn min_x(&self) -> f32 {
+        self.center[0] - self.size[0]
+    }
+    fn max_x(&self) -> f32 {
+        self.center[0] + self.size[0]
+    }
+    fn min_z(&self) -> f32 {
+        self.center[2] - self.size[2]
+    }
+    fn max_z(&self) -> f32 {
+        self.center[2] + self.size[2]
     }
 
+    pub fn rand_coordinates(&self) -> impl Iterator<Item = Vec3> {
+        let rng = rand::thread_rng();
+        let x_range = rand::distributions::Uniform::new(self.min_x(), self.max_x());
+        let x_iter = rng.sample_iter(x_range);
+
+        let rng = rand::thread_rng();
+        let z_range = rand::distributions::Uniform::new(self.min_z(), self.max_z());
+        let z_iter = rng.sample_iter(z_range);
+
+        x_iter.zip(z_iter).map(|(x, z)| Vec3 { x, y: 0., z })
+    }
+}
+
+fn init_rocks(mut cmds: Commands, assets: Res<Assets>) {
+    let size = [100.0, 0., 100.0];
+    let start_rect = SpawnZone::new(Vec3::ZERO, size.into());
+    for coord in start_rect.rand_coordinates().take(10) {
+        spawn_astriod(&mut cmds, &assets, coord)
+    }
+}
+
+fn spawn_astriod(cmds: &mut Commands, assets: &Res<Assets>, translation: Vec3) {
     let mut rng = rand::thread_rng();
-
-    let x = rng.gen_range(SPAWN_RANGE_X);
-    let y = 0.0;
-    let z = rng.gen_range(SPAWN_RANGE_Y);
-
-    let translation = Vec3::new(x, y, z);
     let transform = Transform::from_translation(translation);
     let velocity = (random_unit_vec(&mut rng) * VELOCITY_SCALAR).into();
-    let acc = (random_unit_vec(&mut rng) * ACC_SCALAR).into();
+    let acc = Vec3::ZERO.into();
 
     let model = SceneBundle {
         scene: assets.astriod.clone(),
@@ -201,5 +226,5 @@ fn spawn_astriod(
         },
         CollisionDamage(Astroid::DAMAGE),
     );
-    cmd.spawn(rock);
+    cmds.spawn(rock);
 }

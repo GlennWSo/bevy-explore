@@ -22,9 +22,16 @@ fn remove_all(mut cmds: Commands, q: Query<Entity, With<Health>>) {
     }
 }
 
-fn remove_far(mut cmds: Commands, q: Query<(Entity, &Transform), Without<Keep>>) {
+fn remove_far(
+    mut cmds: Commands,
+    q: Query<(Entity, &Transform), Without<Keep>>,
+    player_q: Query<(&Transform), With<Keep>>,
+) {
+    let Ok(player) = player_q.get_single() else {
+        return;
+    };
     for (ent, trans) in q.iter() {
-        let distance = trans.translation.distance(Vec3::ZERO);
+        let distance = trans.translation.distance(player.translation);
         if distance > MAX_DISTANCE {
             cmds.entity(ent).despawn_recursive();
         }
