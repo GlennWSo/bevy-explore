@@ -1,9 +1,11 @@
+use std::ops::Add;
 use std::ops::Deref;
 use std::ops::DerefMut;
 use std::ops::Range;
 
 use bevy::prelude::*;
 
+use bevy::utils::HashSet;
 use rand::rngs::ThreadRng;
 use rand::Rng;
 
@@ -15,9 +17,10 @@ use crate::movement::Acc;
 use crate::movement::MovingObj;
 use crate::movement::Velocity;
 use crate::schedule::InGameSet;
+use crate::ship::SpaceShip;
 
-const VELOCITY_SCALAR: f32 = 5.0;
-const ACC_SCALAR: f32 = 1.0;
+// const VELOCITY_SCALAR: f32 = 5.0;
+const VELOCITY_SCALAR: f32 = 0.0;
 pub struct AstriodPlug;
 
 impl AstriodPlug {
@@ -30,6 +33,8 @@ impl Plugin for AstriodPlug {
         let timer = Timer::from_seconds(Self::SPAWN_TIMER, TimerMode::Repeating);
         let timer = SpawnTimer(timer);
         app.insert_resource(timer)
+            .init_resource::<Zones>()
+            .add_systems(Update, check_player_zone.in_set(InGameSet::Spawn))
             .add_systems(Startup, init_rocks)
             .add_systems(Update, split_dead.in_set(InGameSet::Spawn))
             .add_systems(Update, rotate_astriods.in_set(InGameSet::EntityUpdate));
@@ -153,28 +158,83 @@ fn random_shards<const N: usize>(
     })
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Resource, Copy, Clone, Debug, Default, Hash, PartialEq, Eq)]
 struct SpawnZone {
-    center: Vec3,
-    /// half sides
-    size: Vec3,
+    row: i32,
+    col: i32,
+}
+
+impl From<Vec3> for SpawnZone {
+    fn from(position: Vec3) -> Self {
+        let col = (position[0] / Self::SIZE / 2.).round() as i32;
+        let row = (position[2] / Self::SIZE / 2.).round() as i32;
+        Self { col, row }
+    }
+}
+
+impl From<[i32; 2]> for SpawnZone {
+    fn from(value: [i32; 2]) -> Self {
+        Self {
+            row: value[0],
+            col: value[1],
+        }
+    }
+}
+
+impl Add<&SpawnZone> for SpawnZone {
+    type Output = SpawnZone;
+
+    fn add(self, rhs: &SpawnZone) -> Self::Output {
+        let row = self.row + rhs.row;
+        let col = self.col + rhs.col;
+        Self { row, col }
+    }
 }
 
 impl SpawnZone {
-    fn new(center: Vec3, size: Vec3) -> Self {
-        Self { center, size }
+    /// halfsize of square
+    const SIZE: f32 = 100.0;
+    fn new(row: i32, col: i32) -> Self {
+        Self { row, col }
     }
+
+    fn center(&self) -> Vec3 {
+        let x = self.col as f32 * Self::SIZE * 2.;
+        let z = self.row as f32 * Self::SIZE * 2.;
+        let y = 0.0;
+        Vec3 { x, y, z }
+    }
+
+    fn distance(&self, rhs: Vec3) -> f32 {
+        self.center().distance(rhs)
+    }
+
     fn min_x(&self) -> f32 {
-        self.center[0] - self.size[0]
+        self.center()[0] - Self::SIZE
     }
     fn max_x(&self) -> f32 {
-        self.center[0] + self.size[0]
+        self.center()[0] + Self::SIZE
     }
     fn min_z(&self) -> f32 {
-        self.center[2] - self.size[2]
+        self.center()[2] - Self::SIZE
     }
     fn max_z(&self) -> f32 {
-        self.center[2] + self.size[2]
+        self.center()[2] + Self::SIZE
+    }
+
+    const ADJECENT: [[i32; 2]; 9] = [
+        [-1, -1],
+        [-1, 0],
+        [-1, 1],
+        [0, -1],
+        [0, 1],
+        [1, -1],
+        [1, 0],
+        [1, 1],
+        [0, 0],
+    ];
+    fn neighbors(&self) -> [Self; 9] {
+        Self::ADJECENT.map(|rc| Into::<Self>::into(rc) + self)
     }
 
     pub fn rand_coordinates(&self) -> impl Iterator<Item = Vec3> {
@@ -188,12 +248,41 @@ impl SpawnZone {
 
         x_iter.zip(z_iter).map(|(x, z)| Vec3 { x, y: 0., z })
     }
+
+    fn spawn(&self, cmds: &mut Commands, assets: &Res<Assets>) {
+        for coord in self.rand_coordinates().take(40) {
+            spawn_astriod(cmds, assets, coord)
+        }
+    }
+}
+
+#[derive(Resource, Default)]
+struct Zones {
+    // active: SpawnZone,
+    visits: HashSet<SpawnZone>,
+}
+
+fn check_player_zone(
+    mut cmds: Commands,
+    q: Query<&Transform, With<SpaceShip>>,
+    mut zones: ResMut<Zones>,
+    assets: Res<Assets>,
+) {
+    let Ok(player) = q.get_single() else {
+        return;
+    };
+
+    let zone: SpawnZone = player.translation.into();
+    for zone in zone.neighbors() {
+        if zones.visits.insert(zone) {
+            zone.spawn(&mut cmds, &assets);
+        }
+    }
 }
 
 fn init_rocks(mut cmds: Commands, assets: Res<Assets>) {
-    let size = [100.0, 0., 100.0];
-    let start_rect = SpawnZone::new(Vec3::ZERO, size.into());
-    for coord in start_rect.rand_coordinates().take(10) {
+    let start_rect = SpawnZone::new(0, 0);
+    for coord in start_rect.rand_coordinates().take(40) {
         spawn_astriod(&mut cmds, &assets, coord)
     }
 }

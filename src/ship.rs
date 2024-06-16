@@ -14,7 +14,7 @@ const START_TRANSLATION: Vec3 = Vec3::new(0., 0., -20.);
 const SHIP_SPEED: f32 = 25.0;
 const SHIP_ROTATION_SPEED: f32 = 2.5;
 const SHIP_ROLL_SPEED: f32 = 2.5;
-const SHIP_HEALTH: i32 = 100;
+const SHIP_HEALTH: i32 = 10000;
 const SHIP_COLLISION_DAMAGE: i32 = 30;
 
 pub struct ShipPlug;
