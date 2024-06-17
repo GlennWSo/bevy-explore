@@ -136,10 +136,11 @@ fn ship_movement_ctrl(
         roll = -SHIP_ROLL_SPEED;
     }
 
-    transform.rotate_y(rotation * time.delta_seconds());
-    transform.rotate_local_z(-roll * time.delta_seconds());
+    let dt = time.delta_seconds();
+    transform.rotate_y(rotation * dt);
+    transform.rotate_local_z(-roll * dt);
 
-    velocity.0 = -transform.forward() * movement;
+    velocity.0 += -transform.forward() * movement * dt;
 }
 
 fn spawn_spaceship(mut cmds: Commands, assets: Res<Assets>) {
