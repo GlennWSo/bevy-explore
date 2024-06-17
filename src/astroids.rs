@@ -12,6 +12,7 @@ use rand::Rng;
 use crate::assets::Assets;
 use crate::collide::Collider;
 use crate::collide::CollisionDamage;
+use crate::despawn;
 use crate::health::Health;
 use crate::movement::Acc;
 use crate::movement::MovingObj;
@@ -35,8 +36,11 @@ impl Plugin for AstriodPlug {
         app.insert_resource(timer)
             .init_resource::<Zones>()
             .add_systems(Update, check_player_zone.in_set(InGameSet::Spawn))
-            .add_systems(Startup, init_rocks)
             .add_systems(Update, split_dead.in_set(InGameSet::Spawn))
+            .add_systems(
+                Update,
+                despawn::remove_far::<Astroid>.in_set(InGameSet::Despawn),
+            )
             .add_systems(Update, rotate_astriods.in_set(InGameSet::EntityUpdate));
     }
 }
@@ -193,7 +197,7 @@ impl Add<&SpawnZone> for SpawnZone {
 
 impl SpawnZone {
     /// halfsize of square
-    const SIZE: f32 = 100.0;
+    const SIZE: f32 = 50.0;
     fn new(row: i32, col: i32) -> Self {
         Self { row, col }
     }
@@ -249,8 +253,9 @@ impl SpawnZone {
         x_iter.zip(z_iter).map(|(x, z)| Vec3 { x, y: 0., z })
     }
 
+    const N_ROCKS: usize = 10;
     fn spawn(&self, cmds: &mut Commands, assets: &Res<Assets>) {
-        for coord in self.rand_coordinates().take(40) {
+        for coord in self.rand_coordinates().take(Self::N_ROCKS) {
             spawn_astriod(cmds, assets, coord)
         }
     }

@@ -36,6 +36,9 @@ impl Plugin for ShipPlug {
 #[derive(Component)]
 pub struct SpaceShip;
 
+#[derive(Component)]
+pub struct Player;
+
 #[derive(Component, Debug)]
 struct Shield;
 
@@ -156,6 +159,7 @@ fn spawn_spaceship(mut cmds: Commands, assets: Res<Assets>) {
     };
     let ship = (
         obj,
+        Player,
         SpaceShip,
         MissleLauncher::new(0.05),
         Keep,
