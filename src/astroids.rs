@@ -1,15 +1,10 @@
-use std::borrow::BorrowMut;
 use std::ops::Add;
 use std::ops::Deref;
 use std::ops::DerefMut;
-use std::ops::Range;
 
 use bevy::prelude::*;
 
 use bevy::utils::HashMap;
-use bevy::utils::HashSet;
-use rand::distributions::Uniform;
-use rand::rngs::ThreadRng;
 use rand::Rng;
 use rand_pcg::Pcg64;
 use rand_seeder::Seeder;
@@ -17,17 +12,13 @@ use rand_seeder::Seeder;
 use crate::assets::Assets;
 use crate::collide::Collider;
 use crate::collide::CollisionDamage;
-use crate::despawn;
 use crate::health::Health;
-use crate::movement::Acc;
 use crate::movement::MovingObj;
 use crate::movement::Velocity;
 use crate::schedule::InGameSet;
 use crate::ship::Player;
 use crate::ship::SpaceShip;
 
-// const VELOCITY_SCALAR: f32 = 5.0;
-const VELOCITY_SCALAR: f32 = 0.0;
 pub struct AstriodPlug;
 
 impl AstriodPlug {
@@ -54,8 +45,9 @@ impl Plugin for AstriodPlug {
             // .add_systems(Update, despawn_astroid.in_set(InGameSet::Despawn))
             // .add_systems(
             //     Update,
-            //     despawn::despawn_far::<Astroid>.in_set(InGameSet::Despawn),
+            //     despawn::despawn_far::<Astroid, 1000>.in_set(InGameSet::Despawn),
             // )
+            .add_systems(Update, despawn_out_of_zone.in_set(InGameSet::Despawn))
             .add_systems(Update, rotate_astriods.in_set(InGameSet::EntityUpdate));
     }
 }
@@ -67,14 +59,77 @@ pub struct Astroid {
 
 impl Astroid {
     const ROTATION_SPEED: f32 = 1.0;
-    const RADIUS: f32 = 2.5;
-    const LIFE: i32 = 40;
-    const HEALTH: Health = Health {
-        life: Self::LIFE,
-        death_cry: crate::health::DeathCry::None,
-    };
+    const RADIUS_MOD: f32 = 2.5;
+    /// hit point scaling with size
+    const LIFE_MOD: i32 = 10;
+    /// hit point scaling with size
+    const DAMAGE_MOD: i32 = 5;
 
-    const DAMAGE: CollisionDamage = CollisionDamage(20);
+    fn spawn(
+        &self,
+        assets: &Res<Assets>,
+        at: impl Iterator<Item = (Vec3, Velocity)>,
+        cmds: &mut Commands,
+        bundle: impl Bundle + Copy,
+    ) {
+        let batch: Box<[_]> = at
+            .map(|(coord, velocity)| {
+                let transform = Transform {
+                    translation: coord,
+                    scale: Vec3::ONE * self.radius() / 2.5,
+                    ..Default::default()
+                };
+                let model = SceneBundle {
+                    scene: assets.astriod.clone(),
+                    transform,
+                    ..Default::default()
+                };
+                let collider = self.collider();
+                let obj = MovingObj {
+                    model,
+                    collider,
+                    velocity,
+                    ..Default::default()
+                };
+                (
+                    AstriodBundle(obj, self.clone(), self.damage(), self.health()),
+                    bundle,
+                )
+            })
+            .collect();
+        cmds.spawn_batch(batch);
+    }
+
+    fn damage(&self) -> CollisionDamage {
+        CollisionDamage(self.bulk as i32 * Self::DAMAGE_MOD)
+    }
+
+    fn health(&self) -> Health {
+        Health {
+            life: self.bulk as i32 * Self::LIFE_MOD,
+            ..Default::default()
+        }
+    }
+
+    fn collider(&self) -> Collider {
+        Collider {
+            radius: self.radius(),
+            ..Default::default()
+        }
+    }
+
+    fn radius(&self) -> f32 {
+        (self.bulk as f32).sqrt() * Self::RADIUS_MOD
+    }
+
+    const SPEED_MOD: f32 = 2.0;
+    fn random_velocity() -> Velocity {
+        let mut rng = rand::thread_rng();
+
+        let v_unit = random_unit_vec(&mut rng);
+        let factor: f32 = rng.gen_range(0.0..Self::SPEED_MOD);
+        Velocity(v_unit * factor)
+    }
 }
 
 #[derive(Resource, Debug)]
@@ -108,43 +163,27 @@ fn rotate_astriods(mut q: Query<&mut Transform, With<Astroid>>, time: Res<Time>)
     }
 }
 
-#[derive(Component)]
-struct Shard;
+// #[derive(Component, Clone, Copy)]
+// struct Shard;
 
 fn split_dead(
     mut cmds: Commands,
-    q: Query<(&Health, &Transform, &Velocity, &Astroid), Without<Shard>>,
+    q: Query<(&Health, &Transform, &Velocity, &Astroid)>,
     assets: Res<Assets>,
 ) {
     for (health, &transform, &velocity, Astroid { bulk }) in q.iter() {
         if **health > 0 {
             continue;
         }
-        let objs = random_shards(&assets.astriod, transform, velocity, 5);
-
-        for obj in objs {
-            let rock = (
-                obj,
-                Shard,
-                Astroid { bulk: 1 },
-                Health {
-                    life: 20,
-                    ..Default::default()
-                },
-                Astroid::DAMAGE,
-            );
-            cmds.spawn(rock);
-        }
+        let velicities = explode_veclocity(velocity, *bulk as usize - 1);
+        let particles = velicities.into_iter().map(|v| (transform.translation, v));
+        let astroid = Astroid { bulk: 1 };
+        astroid.spawn(&assets, particles, &mut cmds, ());
     }
 }
 
-/// create N objects moving away from input
-fn random_shards(
-    asset: &Handle<Scene>,
-    mut transform: Transform,
-    origin_velocity: Velocity,
-    n: usize,
-) -> Box<[MovingObj]> {
+/// create vectors moving away from vector
+fn explode_veclocity(origin_velocity: Velocity, n: usize) -> Vec<Velocity> {
     let mut rng = rand::thread_rng();
     let base_speed: f32 = rng.gen_range(2.5..10.);
 
@@ -152,37 +191,13 @@ fn random_shards(
     let section_angle = 360.0 / n as f32;
     // let rot = Quat::from_rotation_y(angle.to_radians());
 
-    let explosion: Box<[Vec3]> = (0..n)
+    (0..n)
         .map(|_| {
             let speed_mod = rng.gen_range(0.8..1.25);
             let angle_mod = rng.gen_range(0.8..1.25);
             let rot = Quat::from_rotation_y(section_angle.to_radians() * angle_mod);
-            v = rot.mul_vec3(v) * speed_mod;
-            v
-        })
-        .collect();
-
-    let factor = 0.7;
-    transform.scale *= Vec3::ONE * factor;
-
-    explosion
-        .into_iter()
-        .map(|v| {
-            let model = SceneBundle {
-                scene: asset.clone(),
-                transform,
-                ..Default::default()
-            };
-            let collider = Collider::new(Astroid::RADIUS);
-            let velocity = (*v + *origin_velocity).into();
-            let acc = Acc::default();
-
-            MovingObj {
-                model,
-                velocity,
-                acc,
-                collider,
-            }
+            v = rot.mul_vec3(v) * speed_mod + origin_velocity.0;
+            Velocity(v)
         })
         .collect()
 }
@@ -223,7 +238,8 @@ impl Add<&Zone> for Zone {
 // #[allow(dead_code)]
 impl Zone {
     /// halfsize of square
-    const SIZE: f32 = 80.0;
+    const SIZE: f32 = 100.0;
+    #[allow(dead_code)]
     fn new(row: i32, col: i32) -> Self {
         Self { row, col }
     }
@@ -235,6 +251,7 @@ impl Zone {
         Vec3 { x, y, z }
     }
 
+    #[allow(dead_code)]
     fn distance(&self, rhs: Vec3) -> f32 {
         self.center().distance(rhs)
     }
@@ -303,13 +320,17 @@ impl Zone {
 
 #[derive(Default, Debug)]
 struct Population {
-    rocks: HashMap<AstroidSeed, u32>,
+    rocks: HashMap<Astroid, u32>,
 }
 impl Population {
-    fn spawn(&self, cmds: &mut Commands, assets: &Res<Assets>, zone: Zone) {
-        for (seed, count) in self.rocks.iter() {
+    fn load(&self, cmds: &mut Commands, assets: &Res<Assets>, zone: Zone) {
+        for (astriod, count) in self.rocks.iter() {
             let n = *count as usize;
-            seed.spawn(assets, zone.rand_coordinates().take(n), cmds);
+            let particles = zone
+                .rand_coordinates()
+                .map(|coord| (coord, Astroid::random_velocity()))
+                .take(n);
+            astriod.spawn(assets, particles, cmds, ());
         }
     }
 }
@@ -318,21 +339,17 @@ impl From<Zone> for Population {
     fn from(zone: Zone) -> Self {
         let mut rng: Pcg64 = Seeder::from(zone).make_rng();
         let n: u8 = rng.gen_range(1..60);
-        let health_dist = Uniform::from(10..40);
-        let seeds = rng.sample_iter(health_dist).map(|life| {
-            let health = Health {
-                ..Default::default()
-            };
-            AstroidSeed(Astroid { bulk: 5 }, Astroid::DAMAGE, health)
-        });
+        let size_dist = rand_distr::Binomial::new(100, 0.1).unwrap();
+        let astriods = rng
+            .sample_iter(size_dist)
+            .map(|bulk| Astroid { bulk: bulk as u8 });
         let mut map = HashMap::new();
-        map.reserve(10);
-        for seed in seeds.take(n as usize) {
+        for seed in astriods.take(n as usize) {
             let res = map.try_insert(seed, 1);
             match res {
                 Ok(_) => (),
-                Err(mut occupied) => {
-                    let mut count = occupied.entry.into_mut();
+                Err(occupied) => {
+                    let count = occupied.entry.into_mut();
                     *count += 1;
                 }
             }
@@ -341,42 +358,7 @@ impl From<Zone> for Population {
     }
 }
 
-type AstroidTuple = (Astroid, CollisionDamage, Health);
-
-#[derive(Debug, Bundle, Hash, PartialEq, Eq, Clone, Copy)]
-struct AstroidSeed(Astroid, CollisionDamage, Health);
-
-impl AstroidSeed {
-    fn spawn(&self, assets: &Res<Assets>, coords: impl Iterator<Item = Vec3>, cmds: &mut Commands) {
-        let batch: Box<[_]> = coords
-            .map(|coord| {
-                error!("spawning at: {coord}");
-                let transform = Transform {
-                    translation: coord,
-                    ..Default::default()
-                };
-                let model = SceneBundle {
-                    scene: assets.astriod.clone(),
-                    transform,
-                    ..Default::default()
-                };
-                let collider = Collider {
-                    radius: Astroid::RADIUS,
-                    ..Default::default()
-                };
-                let obj = MovingObj {
-                    model,
-                    collider,
-                    ..Default::default()
-                };
-                AstriodBundle(obj, self.clone())
-            })
-            .collect();
-        cmds.spawn_batch(batch);
-    }
-}
-
-impl From<AstriodBundle> for AstroidSeed {
+impl From<AstriodBundle> for Astroid {
     fn from(bundle: AstriodBundle) -> Self {
         bundle.1
     }
@@ -385,13 +367,21 @@ impl From<AstriodBundle> for AstroidSeed {
 #[derive(Bundle)]
 struct AstriodBundle(MovingObj, Astroid, CollisionDamage, Health);
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 enum DePopulation {
+    #[default]
     Spawned,
     Despawned(Population),
 }
+
+impl From<Population> for DePopulation {
+    fn from(pop: Population) -> Self {
+        Self::Despawned(pop)
+    }
+}
+
 impl DePopulation {
-    fn insert(&mut self, rock: AstroidSeed) {
+    fn insert(&mut self, rock: Astroid) {
         match self {
             DePopulation::Spawned => {
                 let mut map = HashMap::new();
@@ -413,14 +403,27 @@ struct Zones {
     // active: SpawnZone,
     state: HashMap<Zone, DePopulation>,
 }
+impl Zones {
+    fn insert(&mut self, zone: Zone, astroid: Astroid) {
+        match self.state.get_mut(&zone) {
+            Some(pop) => pop.insert(astroid),
+            None => {
+                let pop: Population = zone.into();
+                let mut depop: DePopulation = pop.into();
+                depop.insert(astroid);
+                self.state.insert_unique_unchecked(zone, depop);
+            }
+        }
+    }
+}
 
 fn init_zone(mut cmds: Commands, mut zones: ResMut<Zones>, assets: Res<Assets>) {
-    let rock_type = AstroidSeed(Astroid { bulk: 5 }, Astroid::DAMAGE, Astroid::HEALTH);
+    let rock_type = Astroid { bulk: 5 };
     let mut rocks = HashMap::with_capacity(1);
     rocks.insert_unique_unchecked(rock_type, 4);
     let pop = Population { rocks };
     let zone = [0, 0].into();
-    pop.spawn(&mut cmds, &assets, zone);
+    pop.load(&mut cmds, &assets, zone);
     zones
         .state
         .insert_unique_unchecked(zone, DePopulation::Spawned);
@@ -440,15 +443,14 @@ fn spawn_zones(
         match zones.state.get(&zone) {
             None => {
                 let pop: Population = zone.into();
-                pop.spawn(&mut cmds, &assets, zone);
-                error!("Spawining Zone:{:?} {:?}", zone, zone.center());
+                pop.load(&mut cmds, &assets, zone);
                 zones
                     .state
                     .insert_unique_unchecked(zone, DePopulation::Spawned);
             }
             Some(depop) => {
                 if let DePopulation::Despawned(pop) = depop {
-                    pop.spawn(&mut cmds, &assets, zone);
+                    pop.load(&mut cmds, &assets, zone);
                     zones.state.insert(zone, DePopulation::Spawned);
                 }
             }
@@ -456,17 +458,11 @@ fn spawn_zones(
     }
 }
 
-fn init_rocks(mut cmds: Commands, assets: Res<Assets>) {
-    let start_rect = Zone::new(0, 0);
-    for coord in start_rect.rand_coordinates().take(40) {
-        spawn_astriod(&mut cmds, &assets, coord)
-    }
-}
-
+#[allow(dead_code)]
 fn spawn_astriod(cmds: &mut Commands, assets: &Res<Assets>, translation: Vec3) {
     let mut rng = rand::thread_rng();
     let transform = Transform::from_translation(translation);
-    let velocity = (random_unit_vec(&mut rng) * VELOCITY_SCALAR).into();
+    let velocity = (random_unit_vec(&mut rng) * Vec3::ZERO).into();
     let acc = Vec3::ZERO.into();
 
     let model = SceneBundle {
@@ -474,7 +470,8 @@ fn spawn_astriod(cmds: &mut Commands, assets: &Res<Assets>, translation: Vec3) {
         transform,
         ..Default::default()
     };
-    let collider = Collider::new(Astroid::RADIUS);
+    let astroid = Astroid { bulk: 5 };
+    let collider = astroid.collider();
     let obj = MovingObj {
         model,
         velocity,
@@ -482,19 +479,11 @@ fn spawn_astriod(cmds: &mut Commands, assets: &Res<Assets>, translation: Vec3) {
         collider,
     };
 
-    let rock = (
-        obj,
-        Astroid { bulk: 5 },
-        Health {
-            life: Astroid::LIFE,
-            ..Default::default()
-        },
-        Astroid::DAMAGE,
-    );
+    let rock = (obj, astroid, astroid.health(), astroid.damage());
     cmds.spawn(rock);
 }
 
-const DESPAWN_DIST: f32 = 1000.;
+const DESPAWN_DIST: f32 = Zone::SIZE * 5.;
 
 #[derive(Event)]
 struct DespawnEvent {
@@ -524,28 +513,42 @@ fn despawn_oob_zones(
     }
 }
 
+fn despawn_out_of_zone(
+    mut cmds: Commands,
+    q: Query<(Entity, &Transform, &Astroid)>,
+    player_q: Query<&Transform, With<Player>>,
+    mut zones: ResMut<Zones>,
+) {
+    let dist = Zone::SIZE * 8.;
+    let Ok(player) = player_q.get_single() else {
+        return;
+    };
+    for (ent, trans, &astroid) in q.iter() {
+        let distance = trans.translation.distance(player.translation);
+        if distance > dist {
+            let zone: Zone = trans.translation.into();
+            cmds.entity(ent).despawn_recursive();
+            zones.insert(zone, astroid);
+        }
+    }
+}
 fn despawn_zone(
     mut cmds: Commands,
-    q: Query<(Entity, &Transform, &Astroid, &Health, &CollisionDamage), Without<Shard>>,
+    q: Query<(Entity, &Transform, &Astroid)>,
     mut reader: EventReader<DespawnEvent>,
     mut zones: ResMut<Zones>,
 ) {
     for event in reader.read() {
-        error!("despawning zone: {:?}", event.zone);
-        q.iter()
-            .for_each(|(ent, transform, _astriod, health, dmg)| {
-                if event.zone.inside(transform.translation) {
-                    let seed = AstroidSeed(Astroid { bulk: 5 }, *dmg, *health);
-                    let pop = zones.state.get_mut(&event.zone).unwrap();
-                    pop.insert(seed);
-                    // error!("pop {:?}", pop);
-                    cmds.entity(ent).despawn_recursive();
-                }
-            });
+        q.iter().for_each(|(ent, transform, astriod)| {
+            if event.zone.inside(transform.translation) {
+                let pop = zones.state.get_mut(&event.zone).unwrap();
+                pop.insert(*astriod);
+                cmds.entity(ent).despawn_recursive();
+            }
+        });
         match zones.state.get_mut(&event.zone).unwrap() {
             DePopulation::Despawned(_) => (),
             pop => {
-                error!("zone was empty");
                 *pop = DePopulation::Despawned(Population::default());
             }
         }

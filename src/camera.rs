@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{despawn::Keep, movement::Velocity, schedule::InGameSet, ship::SpaceShip};
 
-const CAM_DISTANCE: f32 = 120.;
+const CAM_DISTANCE: f32 = 140.;
 
 pub struct CameraPlugin;
 
