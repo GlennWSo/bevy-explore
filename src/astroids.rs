@@ -92,7 +92,13 @@ impl Astroid {
                     ..Default::default()
                 };
                 (
-                    AstriodBundle(obj, self.clone(), self.damage(), self.health()),
+                    AstriodBundle(
+                        obj,
+                        self.clone(),
+                        self.damage(),
+                        self.health(),
+                        Name::new("Astroid"),
+                    ),
                     bundle,
                 )
             })
@@ -365,7 +371,7 @@ impl From<AstriodBundle> for Astroid {
 }
 
 #[derive(Bundle)]
-struct AstriodBundle(MovingObj, Astroid, CollisionDamage, Health);
+struct AstriodBundle(MovingObj, Astroid, CollisionDamage, Health, Name);
 
 #[derive(Debug, Default)]
 enum DePopulation {

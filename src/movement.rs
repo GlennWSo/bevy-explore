@@ -7,7 +7,7 @@ use crate::{collide::Collider, schedule::InGameSet};
 pub struct MovePlug;
 impl Plugin for MovePlug {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app.register_type::<Velocity>().add_systems(
             Update,
             (update_velocity, update_position)
                 .chain()
@@ -25,7 +25,8 @@ impl From<Vec3> for Acc {
     }
 }
 
-#[derive(Clone, Copy, Component, Debug, Default)]
+#[derive(Clone, Copy, Component, Debug, Default, Reflect)]
+#[reflect(Component)]
 pub struct Velocity(pub Vec3);
 
 impl From<Vec3> for Velocity {

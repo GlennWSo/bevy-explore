@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use learn_bevy::{
     assets::AssetPlug, astroids::AstriodPlug, camera::CameraPlugin, collide::CollidePlugin,
     despawn::DespawnPlugin, health::HealthPlugin, movement::MovePlug, schedule::SchedulePlugin,
@@ -27,6 +28,7 @@ fn main() {
             color: Color::default(),
             brightness: 750.,
         })
+        .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(StatePlugin)
         .add_plugins(SchedulePlugin)
         .add_plugins(AssetPlug)

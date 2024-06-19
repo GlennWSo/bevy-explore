@@ -169,6 +169,7 @@ fn spawn_spaceship(mut cmds: Commands, assets: Res<Assets>) {
             ..Default::default()
         },
         CollisionDamage(SHIP_COLLISION_DAMAGE),
+        Name::new("PlayerShip"),
     );
     cmds.spawn(ship);
 }
