@@ -34,7 +34,7 @@ impl Plugin for CollidePlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Debug, Component, Hash, PartialEq, Eq, Copy, Clone)]
 pub struct CollisionDamage(pub i32);
 
 impl Deref for CollisionDamage {

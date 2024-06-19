@@ -11,7 +11,7 @@ use crate::{
 #[derive(Component)]
 pub struct Keep;
 
-const MAX_DISTANCE: f32 = 1000.0;
+pub const MAX_DISTANCE: f32 = 200.0;
 pub struct DespawnPlugin;
 
 impl Plugin for DespawnPlugin {
@@ -26,7 +26,7 @@ fn remove_all(mut cmds: Commands, q: Query<Entity, With<Health>>) {
     }
 }
 
-pub fn remove_far<T: Component>(
+pub fn despawn_far<T: Component>(
     mut cmds: Commands,
     q: Query<(Entity, &Transform), With<T>>,
     player_q: Query<&Transform, With<Player>>,

@@ -29,14 +29,14 @@ fn despawn_dead(mut cmds: Commands, q: Query<(Entity, &Health)>, assets: Res<Ass
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Hash, PartialEq, Eq, Copy, Clone)]
 pub enum DeathCry {
     Pop,
     #[default]
     None,
 }
 
-#[derive(Component, Default, Debug)]
+#[derive(Component, Default, Debug, Hash, PartialEq, Eq, Copy, Clone)]
 pub struct Health {
     pub life: i32,
     pub death_cry: DeathCry,

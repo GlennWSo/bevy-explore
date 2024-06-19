@@ -10,11 +10,11 @@ use crate::movement::{MovingObj, Velocity};
 use crate::schedule::InGameSet;
 use crate::state::GameState;
 
-const START_TRANSLATION: Vec3 = Vec3::new(0., 0., -20.);
+// const START_TRANSLATION: Vec3 = Vec3::new(0., 0., -20.);
 const SHIP_SPEED: f32 = 25.0;
 const SHIP_ROTATION_SPEED: f32 = 2.5;
 const SHIP_ROLL_SPEED: f32 = 2.5;
-const SHIP_HEALTH: i32 = 10000;
+const SHIP_HEALTH: i32 = 1000000;
 const SHIP_COLLISION_DAMAGE: i32 = 30;
 
 pub struct ShipPlug;
@@ -148,7 +148,7 @@ fn spawn_spaceship(mut cmds: Commands, assets: Res<Assets>) {
 
     let model = SceneBundle {
         scene: assets.ship.clone(),
-        transform: Transform::from_translation(START_TRANSLATION),
+        transform: Transform::from_translation(Vec3::ZERO),
         ..Default::default()
     };
 

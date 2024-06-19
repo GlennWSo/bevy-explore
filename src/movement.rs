@@ -47,7 +47,7 @@ impl DerefMut for Velocity {
     }
 }
 
-#[derive(Bundle)]
+#[derive(Bundle, Default)]
 pub struct MovingObj {
     pub velocity: Velocity,
     pub acc: Acc,
