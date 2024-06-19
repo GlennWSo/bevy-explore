@@ -82,8 +82,9 @@
             cp -r assets $out/bin/wasm/
 
             cd $out/bin
-            cp ${./www/index.html} index.html
-            cp ${./www/wasm/index.html} wasm/index.html
+            cp -r ${./www}/* .
+            # cp ${./www/index.html} index.html
+            # cp ${./www/wasm/index.html} wasm/index.html
 
             mv ${wasmBuild.pname}.wasm wasm/
             wasm-bindgen --no-typescript --target web \
