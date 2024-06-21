@@ -32,6 +32,10 @@ impl Plugin for AstriodPlug {
         let timer = SpawnTimer(timer);
         app.insert_resource(timer)
             .init_resource::<Zones>()
+            .register_type::<Zones>()
+            .register_type::<Zone>()
+            .register_type::<DePopulation>()
+            .register_type::<Population>()
             .add_event::<DespawnEvent>()
             .add_systems(Startup, init_zone)
             .add_systems(
@@ -52,7 +56,7 @@ impl Plugin for AstriodPlug {
     }
 }
 
-#[derive(Component, Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Component, Debug, PartialEq, Eq, Hash, Clone, Copy, Reflect)]
 pub struct Astroid {
     bulk: u8,
 }
@@ -210,7 +214,7 @@ fn explode_veclocity(origin_velocity: Velocity, n: usize) -> Vec<Velocity> {
         .collect()
 }
 
-#[derive(Component, Copy, Clone, Debug, Default, Hash, PartialEq, Eq)]
+#[derive(Component, Reflect, Copy, Clone, Debug, Default, Hash, PartialEq, Eq)]
 struct Zone {
     row: i32,
     col: i32,
@@ -246,7 +250,7 @@ impl Add<&Zone> for Zone {
 // #[allow(dead_code)]
 impl Zone {
     /// halfsize of square
-    const SIZE: f32 = 100.0;
+    const SIZE: f32 = 200.0;
     #[allow(dead_code)]
     fn new(row: i32, col: i32) -> Self {
         Self { row, col }
@@ -325,7 +329,8 @@ impl Zone {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Reflect)]
+#[reflect(Default)]
 struct Population {
     rocks: HashMap<Astroid, u32>,
 }
@@ -345,11 +350,12 @@ impl Population {
 impl From<Zone> for Population {
     fn from(zone: Zone) -> Self {
         let mut rng: Pcg64 = Seeder::from(zone).make_rng();
-        let n: u8 = rng.gen_range(1..60);
-        let size_dist = rand_distr::Binomial::new(100, 0.1).unwrap();
-        let astriods = rng
-            .sample_iter(size_dist)
-            .map(|bulk| Astroid { bulk: bulk as u8 });
+        let n: u8 = rng.gen_range(1..200);
+        let size_dist = rand_distr::Binomial::new(15, 0.1).unwrap();
+        let astriods = rng.sample_iter(size_dist).map(|rand| {
+            let bulk = ((rand + 1).pow(2) - 1) as u8;
+            Astroid { bulk }
+        });
         let mut map = HashMap::new();
         for seed in astriods.take(n as usize) {
             let res = map.try_insert(seed, 1);
@@ -374,7 +380,7 @@ impl From<AstriodBundle> for Astroid {
 #[derive(Bundle)]
 struct AstriodBundle(MovingObj, Astroid, CollisionDamage, Health, Name);
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Reflect)]
 enum DePopulation {
     #[default]
     Spawned,
@@ -405,7 +411,8 @@ impl DePopulation {
     }
 }
 
-#[derive(Resource, Default)]
+#[derive(Resource, Reflect, Default)]
+#[reflect(Resource)]
 struct Zones {
     // active: SpawnZone,
     state: HashMap<Zone, DePopulation>,
