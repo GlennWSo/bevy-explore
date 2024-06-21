@@ -68,14 +68,14 @@ impl Astroid {
     fn spawn(
         &self,
         assets: &Res<Assets>,
-        at: impl Iterator<Item = (Vec3, Velocity)>,
+        particles: impl Iterator<Item = (Vec2, Velocity)>,
         cmds: &mut Commands,
         bundle: impl Bundle + Copy,
     ) {
-        let batch: Box<[_]> = at
+        let batch: Box<[_]> = particles
             .map(|(coord, velocity)| {
                 let transform = Transform {
-                    translation: coord,
+                    translation: coord.extend(0.0),
                     scale: Vec3::ONE * self.radius() / 2.5,
                     ..Default::default()
                 };
@@ -155,11 +155,10 @@ impl DerefMut for SpawnTimer {
     }
 }
 
-fn random_unit_vec(rng: &mut impl Rng) -> Vec3 {
+fn random_unit_vec(rng: &mut impl Rng) -> Vec2 {
     let x = rng.gen_range(-1.0..1.0);
-    let y = 0.0;
-    let z = rng.gen_range(-1.0..1.0);
-    Vec3::new(x, y, z).normalize_or_zero()
+    let y = rng.gen_range(-1.0..1.0);
+    Vec2::new(x, y).normalize_or_zero()
 }
 
 fn rotate_astriods(mut q: Query<&mut Transform, With<Astroid>>, time: Res<Time>) {
@@ -182,7 +181,10 @@ fn split_dead(
             continue;
         }
         let velicities = explode_veclocity(velocity, *bulk as usize - 1);
-        let particles = velicities.into_iter().map(|v| (transform.translation, v));
+        println!("explosion: {:#?}", velicities);
+        let particles = velicities
+            .into_iter()
+            .map(|v| (transform.translation.truncate(), v));
         let astroid = Astroid { bulk: 1 };
         astroid.spawn(&assets, particles, &mut cmds, ());
     }
@@ -201,8 +203,8 @@ fn explode_veclocity(origin_velocity: Velocity, n: usize) -> Vec<Velocity> {
         .map(|_| {
             let speed_mod = rng.gen_range(0.8..1.25);
             let angle_mod = rng.gen_range(0.8..1.25);
-            let rot = Quat::from_rotation_y(section_angle.to_radians() * angle_mod);
-            v = rot.mul_vec3(v) * speed_mod + origin_velocity.0;
+            let rot = Quat::from_rotation_z(section_angle.to_radians() * angle_mod);
+            v = rot.mul_vec3(v.extend(0.0)).truncate() * speed_mod + *origin_velocity;
             Velocity(v)
         })
         .collect()
@@ -214,10 +216,10 @@ struct Zone {
     col: i32,
 }
 
-impl From<Vec3> for Zone {
-    fn from(position: Vec3) -> Self {
+impl From<Vec2> for Zone {
+    fn from(position: Vec2) -> Self {
         let col = (position[0] / Self::SIZE / 2.).round() as i32;
-        let row = (position[2] / Self::SIZE / 2.).round() as i32;
+        let row = (position[1] / Self::SIZE / 2.).round() as i32;
         Self { col, row }
     }
 }
@@ -250,15 +252,14 @@ impl Zone {
         Self { row, col }
     }
 
-    fn center(&self) -> Vec3 {
+    fn center(&self) -> Vec2 {
         let x = self.col as f32 * Self::SIZE * 2.;
-        let z = self.row as f32 * Self::SIZE * 2.;
-        let y = 0.0;
-        Vec3 { x, y, z }
+        let y = self.row as f32 * Self::SIZE * 2.;
+        Vec2 { x, y }
     }
 
     #[allow(dead_code)]
-    fn distance(&self, rhs: Vec3) -> f32 {
+    fn distance(&self, rhs: Vec2) -> f32 {
         self.center().distance(rhs)
     }
 
@@ -268,11 +269,11 @@ impl Zone {
     fn max_x(&self) -> f32 {
         self.center()[0] + Self::SIZE
     }
-    fn min_z(&self) -> f32 {
-        self.center()[2] - Self::SIZE
+    fn min_y(&self) -> f32 {
+        self.center()[1] - Self::SIZE
     }
-    fn max_z(&self) -> f32 {
-        self.center()[2] + Self::SIZE
+    fn max_y(&self) -> f32 {
+        self.center()[1] + Self::SIZE
     }
 
     const ADJECENT: [[i32; 2]; 9] = [
@@ -290,7 +291,7 @@ impl Zone {
         Self::ADJECENT.map(|rc| Into::<Self>::into(rc) + self)
     }
 
-    pub fn rand_coordinates(&self) -> impl Iterator<Item = Vec3> {
+    pub fn rand_coordinates(&self) -> impl Iterator<Item = Vec2> {
         let rng: Pcg64 = Seeder::from(self).make_rng();
         let x_range = rand::distributions::Uniform::new(self.min_x(), self.max_x());
         let x_iter = rng.sample_iter(x_range);
@@ -301,23 +302,23 @@ impl Zone {
         };
         let zone2 = *self + &offset;
         let rng: Pcg64 = Seeder::from(zone2).make_rng();
-        let z_range = rand::distributions::Uniform::new(self.min_z(), self.max_z());
-        let z_iter = rng.sample_iter(z_range);
+        let y_range = rand::distributions::Uniform::new(self.min_y(), self.max_y());
+        let y_iter = rng.sample_iter(y_range);
 
-        x_iter.zip(z_iter).map(|(x, z)| Vec3 { x, y: 0., z })
+        x_iter.zip(y_iter).map(|(x, y)| Vec2 { x, y })
     }
 
-    fn inside(&self, v: Vec3) -> bool {
+    fn inside(&self, v: Vec2) -> bool {
         if v.x < self.min_x() {
             return false;
         }
         if v.x >= self.max_x() {
             return false;
         }
-        if v.z < self.min_z() {
+        if v.y < self.min_y() {
             return false;
         }
-        if v.z >= self.max_z() {
+        if v.y >= self.max_y() {
             return false;
         }
         true
@@ -444,7 +445,7 @@ fn spawn_zones(
         return;
     };
 
-    let zone: Zone = player.translation.into();
+    let zone: Zone = player.translation.truncate().into();
     for zone in zone.neighbors() {
         match zones.state.get(&zone) {
             None => {
@@ -465,11 +466,11 @@ fn spawn_zones(
 }
 
 #[allow(dead_code)]
-fn spawn_astriod(cmds: &mut Commands, assets: &Res<Assets>, translation: Vec3) {
+fn spawn_astriod(cmds: &mut Commands, assets: &Res<Assets>, translation: Vec2) {
     let mut rng = rand::thread_rng();
-    let transform = Transform::from_translation(translation);
-    let velocity = (random_unit_vec(&mut rng) * Vec3::ZERO).into();
-    let acc = Vec3::ZERO.into();
+    let transform = Transform::from_translation(translation.extend(0.0));
+    let velocity = (random_unit_vec(&mut rng) * Vec2::ZERO).into();
+    let acc = Vec2::ZERO.into();
 
     let model = SceneBundle {
         scene: assets.astriod.clone(),
@@ -512,7 +513,7 @@ fn despawn_oob_zones(
             DePopulation::Despawned(_) => false,
         })
         .filter_map(|(zone, _)| {
-            (zone.center().distance(player.translation) > DESPAWN_DIST).then(|| zone)
+            (zone.center().distance(player.translation.truncate()) > DESPAWN_DIST).then(|| zone)
         })
     {
         writer.send(DespawnEvent { zone: *zone });
@@ -532,7 +533,7 @@ fn despawn_out_of_zone(
     for (ent, trans, &astroid) in q.iter() {
         let distance = trans.translation.distance(player.translation);
         if distance > dist {
-            let zone: Zone = trans.translation.into();
+            let zone: Zone = trans.translation.truncate().into();
             cmds.entity(ent).despawn_recursive();
             zones.insert(zone, astroid);
         }
@@ -546,7 +547,7 @@ fn despawn_zone(
 ) {
     for event in reader.read() {
         q.iter().for_each(|(ent, transform, astriod)| {
-            if event.zone.inside(transform.translation) {
+            if event.zone.inside(transform.translation.truncate()) {
                 let pop = zones.state.get_mut(&event.zone).unwrap();
                 pop.insert(*astriod);
                 cmds.entity(ent).despawn_recursive();
