@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use bevy::audio::Volume;
 use bevy::prelude::*;
 // use bevy::input::InputSystem
@@ -149,6 +151,7 @@ fn spawn_spaceship(mut cmds: Commands, assets: Res<Assets>) {
 
     let mut transform = Transform::default();
     transform.rotate_x(90.0f32.to_radians());
+    transform.rotate_z(PI);
     let model = SceneBundle {
         scene: assets.ship.clone(),
         transform,
