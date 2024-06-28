@@ -16,7 +16,7 @@ impl Plugin for MovePlug {
     }
 }
 
-#[derive(Component, Debug, Default, Deref, DerefMut)]
+#[derive(Clone, Component, Debug, Default, Deref, DerefMut)]
 pub struct Acc(Vec2);
 
 impl From<Vec2> for Acc {
@@ -40,7 +40,6 @@ pub struct MovingObj {
     pub velocity: Velocity,
     pub acc: Acc,
     pub model: SceneBundle,
-    pub collider: Collider,
 }
 
 // impl From<SceneBundle> for MovingObj {

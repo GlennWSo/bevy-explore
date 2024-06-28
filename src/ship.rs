@@ -155,14 +155,15 @@ fn spawn_spaceship(mut cmds: Commands, assets: Res<Assets>) {
         ..Default::default()
     };
 
+    let collider = Collider::new(4.0);
     let obj = MovingObj {
         model,
         velocity: Vec2::ZERO.into(),
         acc: Vec2::ZERO.into(),
-        collider: crate::collide::Collider::new(4.0),
     };
     let ship = (
         obj,
+        collider,
         Player,
         SpaceShip,
         MissleLauncher::new(0.05),
@@ -233,13 +234,14 @@ fn ship_weapon_ctrl(
     cmds.spawn(pew_sound);
     // let death_cry = Some(assets.pop.clone());
     // assets.pop.as_any()
+    let moving_obj = MovingObj {
+        model,
+        velocity,
+        acc: Vec2::ZERO.into(),
+    };
     let missle = (
-        MovingObj {
-            model,
-            velocity,
-            acc: Vec2::ZERO.into(),
-            collider: Collider::new(0.1),
-        },
+        moving_obj,
+        Collider::new(0.1),
         Missle,
         Health {
             life: Missle::HEALTH,
