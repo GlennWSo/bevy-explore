@@ -3,7 +3,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use learn_bevy::{
     assets::AssetPlug, astroids::AstriodPlug, camera::CameraPlugin, collide::CollidePlugin,
     despawn::DespawnPlugin, health::HealthPlugin, movement::MovePlug, schedule::SchedulePlugin,
-    ship::ShipPlug, state::StatePlugin,
+    ship::ShipPlug, state::StatePlugin, zones::ZonePlugin,
 };
 
 fn main() {
@@ -39,6 +39,7 @@ fn main() {
         // .add_plugins(DebugPlug)
         .add_plugins(DespawnPlugin)
         .add_plugins(CollidePlugin)
+        .add_plugins(ZonePlugin)
         .add_plugins(CameraPlugin);
 
     app.run();

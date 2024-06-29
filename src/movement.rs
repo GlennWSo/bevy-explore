@@ -1,8 +1,6 @@
-use std::ops::{Deref, DerefMut};
-
 use bevy::prelude::*;
 
-use crate::{collide::Collider, schedule::InGameSet};
+use crate::schedule::InGameSet;
 
 pub struct MovePlug;
 impl Plugin for MovePlug {
@@ -16,35 +14,22 @@ impl Plugin for MovePlug {
     }
 }
 
-#[derive(Component, Debug, Default)]
-pub struct Acc(Vec3);
+#[derive(Clone, Component, Debug, Default, Deref, DerefMut)]
+pub struct Acc(Vec2);
 
-impl From<Vec3> for Acc {
-    fn from(value: Vec3) -> Self {
+impl From<Vec2> for Acc {
+    fn from(value: Vec2) -> Self {
         Self(value)
     }
 }
 
-#[derive(Clone, Copy, Component, Debug, Default, Reflect)]
+#[derive(Clone, Copy, Component, Debug, Default, Reflect, Deref, DerefMut)]
 #[reflect(Component)]
-pub struct Velocity(pub Vec3);
+pub struct Velocity(pub Vec2);
 
-impl From<Vec3> for Velocity {
-    fn from(value: Vec3) -> Self {
+impl From<Vec2> for Velocity {
+    fn from(value: Vec2) -> Self {
         Self(value)
-    }
-}
-
-impl Deref for Velocity {
-    type Target = Vec3;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Velocity {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
     }
 }
 
@@ -53,7 +38,6 @@ pub struct MovingObj {
     pub velocity: Velocity,
     pub acc: Acc,
     pub model: SceneBundle,
-    pub collider: Collider,
 }
 
 // impl From<SceneBundle> for MovingObj {
@@ -72,7 +56,8 @@ fn update_velocity(mut q: Query<(&Acc, &mut Velocity)>, time: Res<Time>) {
 }
 
 fn update_position(mut q: Query<(&Velocity, &mut Transform)>, time: Res<Time>) {
-    for (velocity, mut position) in q.iter_mut() {
-        position.translation += velocity.0 * time.delta_seconds();
+    for (velocity, mut transolation) in q.iter_mut() {
+        let delta = time.delta_seconds() * **velocity;
+        transolation.translation += delta.extend(0.0);
     }
 }

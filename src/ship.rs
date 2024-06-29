@@ -1,10 +1,12 @@
+use std::f32::consts::PI;
+
 use bevy::audio::Volume;
 use bevy::prelude::*;
 // use bevy::input::InputSystem
 
 use crate::assets::Assets;
 use crate::collide::{Collider, CollisionDamage};
-use crate::despawn::Keep;
+use crate::despawn::{despawn_far, Keep};
 use crate::health::{DeathCry, Health};
 use crate::movement::{MovingObj, Velocity};
 use crate::schedule::InGameSet;
@@ -29,6 +31,7 @@ impl Plugin for ShipPlug {
                 .chain()
                 .in_set(InGameSet::UI),
         )
+        .add_systems(Update, despawn_far::<Missle, 1000>)
         .add_systems(Update, end_player);
     }
 }
@@ -137,29 +140,33 @@ fn ship_movement_ctrl(
     }
 
     let dt = time.delta_seconds();
-    transform.rotate_y(rotation * dt);
-    transform.rotate_local_z(-roll * dt);
+    transform.rotate_z(rotation * dt);
+    transform.rotate_local_y(-roll * dt);
 
-    velocity.0 += -transform.forward() * movement * dt;
+    velocity.0 += -transform.forward().truncate() * movement * dt;
 }
 
 fn spawn_spaceship(mut cmds: Commands, assets: Res<Assets>) {
     // let model_handel = asset_server.load("path/to/thing.glb#Scene0");
 
+    let mut transform = Transform::default();
+    transform.rotate_x(90.0f32.to_radians());
+    transform.rotate_z(PI);
     let model = SceneBundle {
         scene: assets.ship.clone(),
-        transform: Transform::from_translation(Vec3::ZERO),
+        transform,
         ..Default::default()
     };
 
+    let collider = Collider::new(4.0);
     let obj = MovingObj {
         model,
-        velocity: Vec3::ZERO.into(),
-        acc: Vec3::ZERO.into(),
-        collider: crate::collide::Collider::new(4.0),
+        velocity: Vec2::ZERO.into(),
+        acc: Vec2::ZERO.into(),
     };
     let ship = (
         obj,
+        collider,
         Player,
         SpaceShip,
         MissleLauncher::new(0.05),
@@ -205,7 +212,7 @@ fn ship_weapon_ctrl(
     }
 
     let mut transform = *ship_transform;
-    let velocity = (-transform.forward() * Missle::SPEED + **ship_velocity).into();
+    let velocity = (-transform.forward().truncate() * Missle::SPEED + **ship_velocity).into();
     transform.translation -= Missle::FORWARD_OFFSET * *ship_transform.forward();
     transform.rotate_local_y(90.0_f32.to_radians());
 
@@ -230,13 +237,14 @@ fn ship_weapon_ctrl(
     cmds.spawn(pew_sound);
     // let death_cry = Some(assets.pop.clone());
     // assets.pop.as_any()
+    let moving_obj = MovingObj {
+        model,
+        velocity,
+        acc: Vec2::ZERO.into(),
+    };
     let missle = (
-        MovingObj {
-            model,
-            velocity,
-            acc: Vec3::ZERO.into(),
-            collider: Collider::new(0.1),
-        },
+        moving_obj,
+        Collider::new(0.1),
         Missle,
         Health {
             life: Missle::HEALTH,

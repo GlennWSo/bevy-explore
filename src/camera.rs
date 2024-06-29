@@ -22,15 +22,16 @@ fn fallow_player(
 
     if let (Ok(mut camera), Ok(player)) = (camera, player) {
         camera.translation[0] = player.translation[0];
-        camera.translation[2] = player.translation[2];
+        camera.translation[1] = player.translation[1];
     }
 }
 
 fn spawn_camera(mut commands: Commands) {
     let camera = Camera3dBundle {
-        transform: Transform::from_xyz(0., CAM_DISTANCE, 0.).looking_at(Vec3::ZERO, Vec3::Z),
+        transform: Transform::from_xyz(0., 0., CAM_DISTANCE).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     };
+    // let camera = Camera2dBundle::new_with_far(120.);
     let velocity = Velocity::default();
     commands.spawn((camera, Keep, velocity));
 }
