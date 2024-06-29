@@ -1,8 +1,6 @@
-use std::ops::{Deref, DerefMut};
-
 use bevy::prelude::*;
 
-use crate::{collide::Collider, schedule::InGameSet};
+use crate::schedule::InGameSet;
 
 pub struct MovePlug;
 impl Plugin for MovePlug {

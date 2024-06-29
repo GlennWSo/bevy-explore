@@ -1,15 +1,6 @@
-use std::io::Repeat;
-use std::iter;
-use std::ops::Add;
-use std::ops::Deref;
-use std::ops::DerefMut;
-
 use bevy::prelude::*;
 
-use bevy::utils::HashMap;
 use rand::Rng;
-use rand_pcg::Pcg64;
-use rand_seeder::Seeder;
 
 use crate::assets::Assets;
 use crate::collide::Collider;
@@ -18,26 +9,15 @@ use crate::health::Health;
 use crate::movement::MovingObj;
 use crate::movement::Velocity;
 use crate::schedule::InGameSet;
-use crate::ship::Player;
-use crate::ship::SpaceShip;
 use crate::zones::Extra;
 use crate::zones::IntoMovingBundle;
-use crate::zones::Seed;
 use crate::zones::Stage;
 
 pub struct AstriodPlug;
 
-impl AstriodPlug {
-    /// spawn interval in seconds
-    const SPAWN_TIMER: f32 = 1.0;
-}
-
 impl Plugin for AstriodPlug {
     fn build(&self, app: &mut App) {
-        let timer = Timer::from_seconds(Self::SPAWN_TIMER, TimerMode::Repeating);
-        let timer = SpawnTimer(timer);
-        app.insert_resource(timer)
-            .add_systems(Update, split_dead.in_set(InGameSet::Spawn))
+        app.add_systems(Update, split_dead.in_set(InGameSet::Spawn))
             // .add_systems(Update, despawn_astroid.in_set(InGameSet::Despawn))
             // .add_systems(
             //     Update,
@@ -65,10 +45,9 @@ impl Astroid {
         assets: &Res<Assets>,
         particles: impl Iterator<Item = (Vec2, Velocity)>,
         cmds: &mut Commands,
-        bundle: impl Bundle + Copy,
     ) {
         let batch: Box<[_]> = particles
-            .map(|(particle)| {
+            .map(|particle| {
                 let transform = Transform::from_translation(particle.0.extend(0.0));
                 self.bundle(assets, transform, particle.1)
             })
@@ -112,23 +91,6 @@ impl Astroid {
     }
 }
 
-#[derive(Resource, Debug)]
-struct SpawnTimer(Timer);
-
-impl Deref for SpawnTimer {
-    type Target = Timer;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for SpawnTimer {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 fn random_unit_vec(rng: &mut impl Rng) -> Vec2 {
     let x = rng.gen_range(-1.0..1.0);
     let y = rng.gen_range(-1.0..1.0);
@@ -160,7 +122,7 @@ fn split_dead(
             .into_iter()
             .map(|v| (transform.translation.truncate(), v));
         let astroid = Astroid { bulk: 1 };
-        astroid.spawn(&assets, particles, &mut cmds, ());
+        astroid.spawn(&assets, particles, &mut cmds);
     }
 }
 
