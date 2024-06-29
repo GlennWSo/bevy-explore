@@ -10,6 +10,7 @@ pub mod movement;
 pub mod schedule;
 pub mod ship;
 pub mod state;
+pub mod zones;
 
 use bevy::prelude::*;
 use schedule::InGameSet;
