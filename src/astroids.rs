@@ -1,10 +1,12 @@
 use bevy::prelude::*;
+use bevy_xpbd_2d::prelude::*;
 
 use rand::Rng;
 
 use crate::assets::Assets;
-use crate::collide::Collider;
+// use crate::collide::Collider;
 use crate::collide::CollisionDamage;
+use crate::collide::HomeMadeCollider;
 use crate::health::Health;
 use crate::movement::MovingObj;
 use crate::movement::Velocity;
@@ -66,11 +68,11 @@ impl Astroid {
         }
     }
 
-    fn collider(&self) -> Collider {
-        Collider {
-            radius: self.radius(),
-            ..Default::default()
-        }
+    fn collider(&self) -> (Collider, HomeMadeCollider) {
+        (
+            Collider::circle(self.radius() / 10.),
+            HomeMadeCollider::new(self.radius()),
+        )
     }
 
     fn radius(&self) -> f32 {
@@ -147,7 +149,14 @@ fn explode_veclocity(origin_velocity: Velocity, n: usize) -> Vec<Velocity> {
 }
 
 impl Extra for Astroid {
-    type Extras = (Astroid, Health, Collider, CollisionDamage, Name);
+    type Extras = (
+        Astroid,
+        Health,
+        (Collider, HomeMadeCollider),
+        CollisionDamage,
+        Name,
+        RigidBody,
+    );
 
     fn extra(self) -> Self::Extras {
         (
@@ -156,6 +165,7 @@ impl Extra for Astroid {
             self.collider(),
             self.damage(),
             Name::new("Astroid"),
+            RigidBody::Dynamic,
         )
     }
 }

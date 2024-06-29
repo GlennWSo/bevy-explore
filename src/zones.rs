@@ -109,7 +109,8 @@ impl Population {
             let bundles: Box<[_]> = coords
                 .map(|coord| match seed {
                     Seed::Rock(astriod) => {
-                        let velocity = Astroid::random_velocity();
+                        let velocity = Velocity::default();
+                        // let velocity = Astroid::random_velocity();
                         let transform = Transform::from_translation(coord.extend(0.0));
                         astriod.bundle(&assets, transform, velocity)
                     }
@@ -190,7 +191,7 @@ impl Add<&Zone> for Zone {
 // #[allow(dead_code)]
 impl Zone {
     /// halfsize of square
-    const SIZE: f32 = 200.0;
+    const SIZE: f32 = 500.0;
     #[allow(dead_code)]
     fn new(row: i32, col: i32) -> Self {
         Self { row, col }

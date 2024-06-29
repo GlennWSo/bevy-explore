@@ -61,12 +61,12 @@ impl CollisionEvent {
 }
 
 #[derive(Component, Default)]
-pub struct Collider {
+pub struct HomeMadeCollider {
     pub radius: f32,
     pub colliding_entities: Vec<Entity>,
 }
 
-impl Collider {
+impl HomeMadeCollider {
     pub fn new(radius: f32) -> Self {
         Self {
             radius,
@@ -75,7 +75,7 @@ impl Collider {
     }
 }
 
-fn detect_collisions(mut q: Query<(Entity, &GlobalTransform, &mut Collider)>) {
+fn detect_collisions(mut q: Query<(Entity, &GlobalTransform, &mut HomeMadeCollider)>) {
     let mut collisions_map: HashMap<Entity, Vec<Entity>> = HashMap::new();
 
     // first phase dectect collisions
@@ -105,7 +105,7 @@ fn detect_collisions(mut q: Query<(Entity, &GlobalTransform, &mut Collider)>) {
 
 fn handle_collisions<T: Component>(
     mut writer: EventWriter<CollisionEvent>,
-    q: Query<(Entity, &Collider), With<T>>,
+    q: Query<(Entity, &HomeMadeCollider), With<T>>,
 ) {
     for (ent, collider) in q.iter() {
         for &collide_envent in collider.colliding_entities.iter() {

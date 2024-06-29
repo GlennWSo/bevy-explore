@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_xpbd_2d::prelude::*;
+
 use learn_bevy::{
     assets::AssetPlug, astroids::AstriodPlug, camera::CameraPlugin, collide::CollidePlugin,
     despawn::DespawnPlugin, health::HealthPlugin, movement::MovePlug, schedule::SchedulePlugin,
@@ -21,7 +23,9 @@ fn main() {
             ..default()
         }),
         ..default()
-    }));
+    }))
+    .add_plugins(PhysicsPlugins::default())
+    .insert_resource(Gravity(Vec2::ZERO));
 
     app.insert_resource(ClearColor(Color::rgb(0.1, 0., 0.15)))
         .insert_resource(AmbientLight {
