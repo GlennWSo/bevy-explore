@@ -114,14 +114,18 @@ fn split_dead(
     q: Query<(&Health, &Transform, &Velocity, &Astroid)>,
     assets: Res<Assets>,
 ) {
-    for (health, &transform, &velocity, Astroid { bulk }) in q.iter() {
+    for (health, &transform, &velocity, astriod) in q.iter() {
         if **health > 0 {
             continue;
         }
-        let velicities = explode_veclocity(velocity, *bulk as usize - 1);
-        let particles = velicities
-            .into_iter()
-            .map(|v| (transform.translation.truncate(), v));
+        let velicities = explode_veclocity(velocity, astriod.bulk as usize - 1);
+        let particles = velicities.into_iter().map(|v| {
+            let origin = transform.translation.truncate();
+            let c = 1.;
+            let offset = (*v).normalize() * (astriod.radius() + c);
+            let spawn_coord = origin + offset;
+            (spawn_coord, v)
+        });
         let astroid = Astroid { bulk: 1 };
         astroid.spawn(&assets, particles, &mut cmds);
     }
