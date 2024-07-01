@@ -70,7 +70,7 @@ impl Astroid {
 
     fn collider(&self) -> (Collider, HomeMadeCollider) {
         (
-            Collider::circle(self.radius() / 10.),
+            Collider::circle(self.radius() / 4.),
             HomeMadeCollider::new(self.radius()),
         )
     }
@@ -119,7 +119,6 @@ fn split_dead(
             continue;
         }
         let velicities = explode_veclocity(velocity, *bulk as usize - 1);
-        println!("explosion: {:#?}", velicities);
         let particles = velicities
             .into_iter()
             .map(|v| (transform.translation.truncate(), v));

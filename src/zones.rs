@@ -24,7 +24,7 @@ impl Plugin for ZonePlugin {
             .register_type::<ZoneState>()
             .register_type::<Population>()
             .add_event::<DespawnEvent>()
-            // .add_systems(Startup, init_zone)
+            .add_systems(Startup, init_zone)
             .add_systems(
                 Update,
                 (despawn_oob_zones, despawn_zone)
@@ -102,8 +102,15 @@ struct Population {
 }
 
 impl Population {
-    fn spawn(&self, cmds: &mut Commands, assets: &Res<Assets>, zone: Zone) {
-        let mut coords = zone.rand_coordinates();
+    fn size(&self) -> u32 {
+        self.map.iter().map(|(_k, v)| v).sum()
+    }
+    fn spawn_at(
+        &self,
+        cmds: &mut Commands,
+        assets: &Res<Assets>,
+        mut coords: impl Iterator<Item = Vec2>,
+    ) {
         for (seed, count) in &self.map {
             let coords = coords.by_ref().take(*count as usize);
             let bundles: Box<[_]> = coords
@@ -118,26 +125,21 @@ impl Population {
                 .collect();
             cmds.spawn_batch(bundles);
         }
-        // for (seed, count) in self.map.iter() {
-        //     let n = *count as usize;
-        //     let particles = zone
-        //         .rand_coordinates()
-        //         .map(|coord| (coord, Astroid::random_velocity()))
-        //         .take(n);
-        //     match seed {
-        //         Seed::Rock(astriod) => astriod.spawn(assets, particles, cmds, ()),
-        //     };
-        // }
+    }
+
+    fn spawn(&self, cmds: &mut Commands, assets: &Res<Assets>, zone: Zone) {
+        let coords = zone.rand_coordinates();
+        self.spawn_at(cmds, assets, coords);
     }
 }
 
 impl From<Zone> for Population {
     fn from(zone: Zone) -> Self {
         let mut rng: Pcg64 = Seeder::from(zone).make_rng();
-        let n: u8 = rng.gen_range(1..200);
+        let n: u8 = rng.gen_range(10..100);
         let size_dist = rand_distr::Binomial::new(15, 0.1).unwrap();
         let astriods = rng.sample_iter(size_dist).map(|rand| {
-            let bulk = ((rand + 1).pow(2) - 1) as u8;
+            let bulk = ((rand + 1).pow(2)) as u8;
             Astroid { bulk }
         });
         let mut map: HashMap<Seed, _> = HashMap::new();
@@ -313,12 +315,13 @@ impl Zones {
 }
 
 fn init_zone(mut cmds: Commands, mut zones: ResMut<Zones>, assets: Res<Assets>) {
-    let rock = Astroid { bulk: 5 };
-    let mut map = HashMap::with_capacity(1);
-    map.insert_unique_unchecked(Seed::Rock(rock), 4);
-    let pop = Population { map };
-    let zone = [0, 0].into();
-    pop.spawn(&mut cmds, &assets, zone);
+    let zone: Zone = [0, 0].into();
+    let pop: Population = zone.into();
+    // println!("init pop: {:#?}", pop);
+    let coords = zone
+        .rand_coordinates()
+        .filter(|coord| coord.distance(Vec2::ZERO) > 30.0);
+    // pop.spawn_at(&mut cmds, &assets, coords);
     zones
         .state
         .insert_unique_unchecked(zone, ZoneState::Spawned);
