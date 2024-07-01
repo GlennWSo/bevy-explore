@@ -2,7 +2,11 @@ use crate::ship::Player;
 use crate::ship::SpaceShip;
 use std::ops::Add;
 
+use bevy::prelude::SceneBundle;
+use bevy::prelude::*;
 use bevy::{prelude::*, utils::HashMap};
+use bevy_xpbd_2d::components::LinearVelocity;
+use bevy_xpbd_2d::components::RigidBody;
 use rand::prelude::{Rng, SliceRandom};
 use rand_pcg::Pcg64;
 use rand_seeder::Seeder;
@@ -46,18 +50,12 @@ pub trait Stage {
 }
 pub trait IntoMovingBundle {
     type Extras: Bundle + Sized;
-    fn moving_obj(
-        &self,
-        assets: &Res<Assets>,
-        transform: Transform,
-        velocity: Velocity,
-    ) -> MovingObj;
     fn bundle(
         self,
         assets: &Res<Assets>,
         transform: Transform,
-        velocity: Velocity,
-    ) -> (MovingObj, Self::Extras);
+        velocity: Vec2,
+    ) -> (SceneBundle, LinearVelocity, Self::Extras);
 }
 
 impl<C, T> IntoMovingBundle for T
@@ -67,27 +65,17 @@ where
 {
     type Extras = C;
 
-    fn moving_obj(
-        &self,
-        assets: &Res<Assets>,
-        transform: Transform,
-        velocity: Velocity,
-    ) -> MovingObj {
-        let obj = MovingObj {
-            velocity,
-            model: self.stage(assets, transform),
-            ..Default::default()
-        };
-        obj
-    }
-
     fn bundle(
         self,
         assets: &Res<Assets>,
         transform: Transform,
-        velocity: Velocity,
-    ) -> (MovingObj, Self::Extras) {
-        (self.moving_obj(assets, transform, velocity), self.extra())
+        velocity: Vec2,
+    ) -> (SceneBundle, LinearVelocity, Self::Extras) {
+        (
+            self.stage(assets, transform),
+            LinearVelocity(velocity),
+            self.extra(),
+        )
     }
 }
 
@@ -102,6 +90,7 @@ struct Population {
 }
 
 impl Population {
+    #[allow(dead_code)]
     fn size(&self) -> u32 {
         self.map.iter().map(|(_k, v)| v).sum()
     }
@@ -321,7 +310,7 @@ fn init_zone(mut cmds: Commands, mut zones: ResMut<Zones>, assets: Res<Assets>) 
     let coords = zone
         .rand_coordinates()
         .filter(|coord| coord.distance(Vec2::ZERO) > 30.0);
-    // pop.spawn_at(&mut cmds, &assets, coords);
+    pop.spawn_at(&mut cmds, &assets, coords);
     zones
         .state
         .insert_unique_unchecked(zone, ZoneState::Spawned);

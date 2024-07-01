@@ -19,13 +19,13 @@ pub struct AstriodPlug;
 
 impl Plugin for AstriodPlug {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, split_dead.in_set(InGameSet::Spawn))
-            // .add_systems(Update, despawn_astroid.in_set(InGameSet::Despawn))
-            // .add_systems(
-            //     Update,
-            //     despawn::despawn_far::<Astroid, 1000>.in_set(InGameSet::Despawn),
-            // )
-            .add_systems(Update, rotate_astriods.in_set(InGameSet::EntityUpdate));
+        app.add_systems(Update, split_dead.in_set(InGameSet::Spawn));
+        // .add_systems(Update, despawn_astroid.in_set(InGameSet::Despawn))
+        // .add_systems(
+        //     Update,
+        //     despawn::despawn_far::<Astroid, 1000>.in_set(InGameSet::Despawn),
+        // )
+        // .add_systems(Update, rotate_astriods.in_set(InGameSet::EntityUpdate));
     }
 }
 
@@ -45,7 +45,7 @@ impl Astroid {
     fn spawn(
         &self,
         assets: &Res<Assets>,
-        particles: impl Iterator<Item = (Vec2, Velocity)>,
+        particles: impl Iterator<Item = (Vec2, Vec2)>,
         cmds: &mut Commands,
     ) {
         let batch: Box<[_]> = particles
@@ -69,10 +69,7 @@ impl Astroid {
     }
 
     fn collider(&self) -> (Collider, HomeMadeCollider) {
-        (
-            Collider::circle(self.radius() / 4.),
-            HomeMadeCollider::new(self.radius()),
-        )
+        (Collider::circle(1.9), HomeMadeCollider::new(self.radius()))
     }
 
     fn radius(&self) -> f32 {
@@ -80,12 +77,13 @@ impl Astroid {
     }
 
     const SPEED_MOD: f32 = 5.0;
-    pub fn random_velocity() -> Velocity {
+    pub fn random_velocity() -> Vec2 {
         let mut rng = rand::thread_rng();
 
         let v_unit = random_unit_vec(&mut rng);
         let factor: f32 = rng.gen_range(0.0..Self::SPEED_MOD);
-        Velocity(v_unit * factor)
+        v_unit * factor
+        // Velocity::default()
     }
 
     fn scale(&self) -> Vec3 {
@@ -111,18 +109,18 @@ fn rotate_astriods(mut q: Query<&mut Transform, With<Astroid>>, time: Res<Time>)
 
 fn split_dead(
     mut cmds: Commands,
-    q: Query<(&Health, &Transform, &Velocity, &Astroid)>,
+    q: Query<(&Health, &Transform, &LinearVelocity, &Astroid)>,
     assets: Res<Assets>,
 ) {
     for (health, &transform, &velocity, astriod) in q.iter() {
         if **health > 0 {
             continue;
         }
-        let velicities = explode_veclocity(velocity, astriod.bulk as usize - 1);
+        let velicities = explode_veclocity(*velocity, astriod.bulk as usize - 1);
         let particles = velicities.into_iter().map(|v| {
             let origin = transform.translation.truncate();
-            let c = 1.;
-            let offset = (*v).normalize() * (astriod.radius() + c);
+            let c = 5.;
+            let offset = v.normalize() * (astriod.bulk as f32 / 1. + c);
             let spawn_coord = origin + offset;
             (spawn_coord, v)
         });
@@ -132,21 +130,23 @@ fn split_dead(
 }
 
 /// create vectors moving away from vector
-fn explode_veclocity(origin_velocity: Velocity, n: usize) -> Vec<Velocity> {
+fn explode_veclocity(origin_velocity: Vec2, n: usize) -> Vec<Vec2> {
     let mut rng = rand::thread_rng();
     let base_speed: f32 = rng.gen_range(2.5..10.);
 
-    let mut v = random_unit_vec(&mut rng) * base_speed;
+    let mut v = (random_unit_vec(&mut rng) * base_speed).extend(0.0);
     let section_angle = 360.0 / n as f32;
     // let rot = Quat::from_rotation_y(angle.to_radians());
 
     (0..n)
         .map(|_| {
+            // let speed_mod = 1.;
+            // let angle_mod = 1.;
             let speed_mod = rng.gen_range(0.8..1.25);
             let angle_mod = rng.gen_range(0.8..1.25);
             let rot = Quat::from_rotation_z(section_angle.to_radians() * angle_mod);
-            v = rot.mul_vec3(v.extend(0.0)).truncate() * speed_mod + *origin_velocity;
-            Velocity(v)
+            v = rot.mul_vec3(v);
+            v.truncate() * speed_mod + origin_velocity
         })
         .collect()
 }
@@ -179,6 +179,7 @@ impl Stage for Astroid {
         SceneBundle {
             transform,
             scene: assets.astriod.clone(),
+            visibility: Visibility::Visible,
             ..Default::default()
         }
     }
