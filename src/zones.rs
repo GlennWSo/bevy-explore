@@ -3,7 +3,7 @@ use crate::ship::SpaceShip;
 use std::ops::Add;
 
 use bevy::{prelude::*, utils::HashMap};
-use rand::Rng;
+use rand::prelude::{Rng, SliceRandom};
 use rand_pcg::Pcg64;
 use rand_seeder::Seeder;
 
@@ -24,7 +24,7 @@ impl Plugin for ZonePlugin {
             .register_type::<ZoneState>()
             .register_type::<Population>()
             .add_event::<DespawnEvent>()
-            .add_systems(Startup, init_zone)
+            // .add_systems(Startup, init_zone)
             .add_systems(
                 Update,
                 (despawn_oob_zones, despawn_zone)
@@ -109,8 +109,8 @@ impl Population {
             let bundles: Box<[_]> = coords
                 .map(|coord| match seed {
                     Seed::Rock(astriod) => {
-                        let velocity = Velocity::default();
-                        // let velocity = Astroid::random_velocity();
+                        // let velocity = Velocity::default();
+                        let velocity = Astroid::random_velocity();
                         let transform = Transform::from_translation(coord.extend(0.0));
                         astriod.bundle(&assets, transform, velocity)
                     }
@@ -191,7 +191,7 @@ impl Add<&Zone> for Zone {
 // #[allow(dead_code)]
 impl Zone {
     /// halfsize of square
-    const SIZE: f32 = 500.0;
+    const SIZE: f32 = 300.0;
     #[allow(dead_code)]
     fn new(row: i32, col: i32) -> Self {
         Self { row, col }
@@ -236,21 +236,43 @@ impl Zone {
         Self::ADJECENT.map(|rc| Into::<Self>::into(rc) + self)
     }
 
+    /// TODO change signature
+    pub fn grid_coordinates(&self) -> Vec<Vec2> {
+        let n = 15;
+
+        let cell_size = Self::SIZE * 2.0 / n as f32;
+        let origo = self.center() - Self::SIZE + cell_size / 2.0;
+        let coords: Vec<_> = (0..n)
+            .flat_map(|r| {
+                (0..n).map(move |c| {
+                    let x = origo.x + cell_size * c as f32;
+                    let y = origo.y + cell_size * r as f32;
+                    Vec2 { x, y }
+                })
+            })
+            .collect();
+        // coords
+        coords
+    }
+
     pub fn rand_coordinates(&self) -> impl Iterator<Item = Vec2> {
-        let rng: Pcg64 = Seeder::from(self).make_rng();
-        let x_range = rand::distributions::Uniform::new(self.min_x(), self.max_x());
-        let x_iter = rng.sample_iter(x_range);
+        let mut rng: Pcg64 = Seeder::from(self).make_rng();
+        // let x_range = rand::distributions::Uniform::new(self.min_x(), self.max_x());
+        // let x_iter = rng.sample_iter(x_range);
 
-        let offset = Zone {
-            row: 1337,
-            col: 7331,
-        };
-        let zone2 = *self + &offset;
-        let rng: Pcg64 = Seeder::from(zone2).make_rng();
-        let y_range = rand::distributions::Uniform::new(self.min_y(), self.max_y());
-        let y_iter = rng.sample_iter(y_range);
+        // let offset = Zone {
+        //     row: 1337,
+        //     col: 7331,
+        // };
+        // let zone2 = *self + &offset;
+        // let rng: Pcg64 = Seeder::from(zone2).make_rng();
+        // let y_range = rand::distributions::Uniform::new(self.min_y(), self.max_y());
+        // let y_iter = rng.sample_iter(y_range);
 
-        x_iter.zip(y_iter).map(|(x, y)| Vec2 { x, y })
+        // x_iter.zip(y_iter).map(|(x, y)| Vec2 { x, y })
+        let mut coords = self.grid_coordinates();
+        coords.shuffle(&mut rng);
+        coords.into_iter().cycle()
     }
 
     fn inside(&self, v: Vec2) -> bool {

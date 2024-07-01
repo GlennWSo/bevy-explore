@@ -79,7 +79,7 @@ impl Astroid {
         (self.bulk as f32).sqrt() * Self::RADIUS_MOD
     }
 
-    const SPEED_MOD: f32 = 2.0;
+    const SPEED_MOD: f32 = 5.0;
     pub fn random_velocity() -> Velocity {
         let mut rng = rand::thread_rng();
 
