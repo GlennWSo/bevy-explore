@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
+use bevy::sprite::Mesh2dHandle;
 use bevy_xpbd_2d::prelude::*;
 
 use rand::Rng;
@@ -69,7 +70,7 @@ impl Astroid {
     }
 
     fn collider(&self) -> (Collider, HomeMadeCollider) {
-        (Collider::circle(1.9), HomeMadeCollider::new(self.radius()))
+        (Collider::circle(1.0), HomeMadeCollider::new(self.radius()))
     }
 
     fn radius(&self) -> f32 {
@@ -87,7 +88,7 @@ impl Astroid {
     }
 
     fn scale(&self) -> Vec3 {
-        Vec3::splat(self.radius() / 2.)
+        Vec3::splat(self.radius())
     }
 }
 
@@ -178,18 +179,20 @@ impl Stage for Astroid {
         transform: Transform,
     ) -> impl Bundle {
         let transform = transform.with_scale(self.scale());
-        // let model2d = MaterialMesh2dBundle {
-        //     mesh: meshes.add(shape).into(),
-        //     transform: transform.with_scale([1.0, -1.5, 1.0].into()),
-        //     material: materials.add(Color::PURPLE),
-        //     ..default()
-        // };
-        SceneBundle {
+        let mesh = Mesh2dHandle(assets.ball.clone());
+        let model2d = MaterialMesh2dBundle {
+            mesh,
             transform,
-            scene: assets.astriod.clone(),
-            visibility: Visibility::Visible,
-            ..Default::default()
-        }
+            material: assets.asteroid_material.clone(),
+            ..default()
+        };
+        model2d
+        // SceneBundle {
+        //     transform,
+        //     scene: assets.astriod.clone(),
+        //     visibility: Visibility::Visible,
+        //     ..Default::default()
+        // }
     }
 }
 
