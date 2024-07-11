@@ -27,7 +27,8 @@ fn main() {
     .add_plugins(PhysicsPlugins::default())
     .insert_resource(Gravity(Vec2::ZERO));
 
-    app.add_plugins(WorldInspectorPlugin::new())
+    app
+        //.add_plugins(WorldInspectorPlugin::new())
         .add_plugins(StatePlugin)
         .add_plugins(SchedulePlugin)
         .add_plugins(AssetPlug)

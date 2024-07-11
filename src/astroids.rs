@@ -184,7 +184,8 @@ impl Stage for Astroid {
             mesh,
             transform,
             material: assets.asteroid_material.clone(),
-            ..default()
+            visibility: Visibility::Visible,
+            ..Default::default()
         };
         model2d
         // SceneBundle {
