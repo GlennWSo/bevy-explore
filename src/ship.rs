@@ -2,10 +2,11 @@ use std::f32::consts::PI;
 
 use bevy::audio::Volume;
 use bevy::prelude::*;
+use bevy::sprite::MaterialMesh2dBundle;
 use bevy_xpbd_2d::prelude::*;
 // use bevy::input::InputSystem
 
-use crate::assets::Assets;
+use crate::assets::MyAssets;
 use crate::collide::{CollisionDamage, HomeMadeCollider};
 use crate::despawn::{despawn_far, Keep};
 use crate::health::{DeathCry, Health};
@@ -144,33 +145,34 @@ fn ship_movement_ctrl(
     transform.rotate_z(rotation * dt);
     transform.rotate_local_y(-roll * dt);
 
-    velocity.0 += -transform.forward().truncate() * movement * dt;
+    velocity.0 += -dbg!(transform.up()).truncate() * movement * dt;
 }
 
-fn spawn_spaceship(mut cmds: Commands, assets: Res<Assets>) {
-    // let model_handel = asset_server.load("path/to/thing.glb#Scene0");
-
+fn spawn_spaceship(
+    mut cmds: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
     let mut transform = Transform::from_xyz(0., 10., 0.);
-    transform.rotate_local_x(90.0f32.to_radians());
+    // transform.rotate_local_x(90.0f32.to_radians());
     // transform.rotate_x(90.0f32.to_radians());
     transform.rotate_z(PI);
-    let model = SceneBundle {
-        scene: assets.ship.clone(),
-        transform,
-        ..Default::default()
+    let shape = Triangle2d::default();
+    let model2d = MaterialMesh2dBundle {
+        mesh: meshes.add(shape).into(),
+        transform: transform.with_scale([1.0, -1.5, 1.0].into()),
+        material: materials.add(Color::PURPLE),
+        ..default()
     };
 
     let derp = HomeMadeCollider::new(4.0);
     let collider = Collider::circle(4.0);
-    let obj = MovingObj {
-        model,
-        velocity: Vec2::ZERO.into(),
-        acc: Vec2::ZERO.into(),
-    };
     let ship = (
+        Velocity::default(),
         // collider,
         // RigidBody::Kinematic,
-        obj,
+        model2d,
+        collider,
         derp,
         Player,
         SpaceShip,
@@ -196,7 +198,9 @@ fn ship_weapon_ctrl(
     mut q: Query<(&Transform, &Velocity, &mut MissleLauncher), With<SpaceShip>>,
     btn_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
-    assets: Res<Assets>,
+    assets: Res<MyAssets>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     if !btn_input.pressed(KeyCode::Space) {
         return;
@@ -217,16 +221,17 @@ fn ship_weapon_ctrl(
     }
 
     let mut transform = *ship_transform;
-    let velocity = (-transform.forward().truncate() * Missle::SPEED + **ship_velocity).into();
-    transform.translation -= Missle::FORWARD_OFFSET * *ship_transform.forward();
-    transform.rotate_local_y(90.0_f32.to_radians());
+    let velocity: Velocity = (-transform.up().truncate() * Missle::SPEED + **ship_velocity).into();
+    transform.translation -= Missle::FORWARD_OFFSET * *ship_transform.up();
+    // transform.rotate_local_y(90.0_f32.to_radians());
 
-    let scene = assets.missles.clone();
-    let model = SceneBundle {
-        scene,
-        transform,
-        ..Default::default()
+    let model2d = MaterialMesh2dBundle {
+        mesh: meshes.add(Capsule2d::new(0.5, 2.)).into(),
+        transform: transform.with_scale(Vec3::splat(1.)),
+        material: materials.add(Color::PURPLE),
+        ..default()
     };
+
     let settings = PlaybackSettings {
         mode: bevy::audio::PlaybackMode::Despawn,
         speed: 1.5,
@@ -234,7 +239,7 @@ fn ship_weapon_ctrl(
         ..Default::default()
     };
     let pew_sound = AudioBundle {
-        source: assets.laser.clone(),
+        source: assets.laser_sound.clone(),
         settings,
     };
     // audio
@@ -242,13 +247,10 @@ fn ship_weapon_ctrl(
     cmds.spawn(pew_sound);
     // let death_cry = Some(assets.pop.clone());
     // assets.pop.as_any()
-    let moving_obj = MovingObj {
-        model,
-        velocity,
-        acc: Vec2::ZERO.into(),
-    };
     let missle = (
-        moving_obj,
+        // moving_obj,
+        velocity,
+        model2d,
         HomeMadeCollider::new(0.1),
         Missle,
         Health {

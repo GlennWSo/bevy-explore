@@ -27,12 +27,7 @@ fn main() {
     .add_plugins(PhysicsPlugins::default())
     .insert_resource(Gravity(Vec2::ZERO));
 
-    app.insert_resource(ClearColor(Color::rgb(0.1, 0., 0.15)))
-        .insert_resource(AmbientLight {
-            color: Color::default(),
-            brightness: 750.,
-        })
-        .add_plugins(WorldInspectorPlugin::new())
+    app.add_plugins(WorldInspectorPlugin::new())
         .add_plugins(StatePlugin)
         .add_plugins(SchedulePlugin)
         .add_plugins(AssetPlug)

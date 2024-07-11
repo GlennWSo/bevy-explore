@@ -12,7 +12,7 @@ use rand_pcg::Pcg64;
 use rand_seeder::Seeder;
 
 use crate::{
-    assets::Assets,
+    assets::MyAssets,
     astroids::Astroid,
     movement::{MovingObj, Velocity},
     schedule::InGameSet,
@@ -42,35 +42,25 @@ impl Plugin for ZonePlugin {
 
 pub trait Extra {
     type Extras: Bundle + Sized;
-    fn extra(self) -> Self::Extras;
+    fn extra(&self) -> Self::Extras;
 }
 
 pub trait Stage {
-    fn stage(&self, assets: &Res<Assets>, transform: Transform) -> SceneBundle;
+    fn stage(self, assets: &Res<MyAssets>, transform: Transform) -> impl Bundle;
 }
 pub trait IntoMovingBundle {
     type Extras: Bundle + Sized;
-    fn bundle(
-        self,
-        assets: &Res<Assets>,
-        transform: Transform,
-        velocity: Vec2,
-    ) -> (SceneBundle, LinearVelocity, Self::Extras);
+    fn bundle(self, assets: &Res<MyAssets>, transform: Transform, velocity: Vec2) -> impl Bundle;
 }
 
 impl<C, T> IntoMovingBundle for T
 where
     C: Bundle + Sized,
-    T: Extra<Extras = C> + Stage,
+    T: Extra<Extras = C> + Stage + Copy,
 {
     type Extras = C;
 
-    fn bundle(
-        self,
-        assets: &Res<Assets>,
-        transform: Transform,
-        velocity: Vec2,
-    ) -> (SceneBundle, LinearVelocity, Self::Extras) {
+    fn bundle(self, assets: &Res<MyAssets>, transform: Transform, velocity: Vec2) -> impl Bundle {
         (
             self.stage(assets, transform),
             LinearVelocity(velocity),
@@ -97,7 +87,7 @@ impl Population {
     fn spawn_at(
         &self,
         cmds: &mut Commands,
-        assets: &Res<Assets>,
+        assets: &Res<MyAssets>,
         mut coords: impl Iterator<Item = Vec2>,
     ) {
         for (seed, count) in &self.map {
@@ -108,7 +98,7 @@ impl Population {
                         // let velocity = Velocity::default();
                         let velocity = Astroid::random_velocity();
                         let transform = Transform::from_translation(coord.extend(0.0));
-                        astriod.bundle(&assets, transform, velocity)
+                        (*astriod, astriod.bundle(&assets, transform, velocity))
                     }
                 })
                 .collect();
@@ -116,7 +106,7 @@ impl Population {
         }
     }
 
-    fn spawn(&self, cmds: &mut Commands, assets: &Res<Assets>, zone: Zone) {
+    fn spawn(&self, cmds: &mut Commands, assets: &Res<MyAssets>, zone: Zone) {
         let coords = zone.rand_coordinates();
         self.spawn_at(cmds, assets, coords);
     }
@@ -303,7 +293,7 @@ impl Zones {
     }
 }
 
-fn init_zone(mut cmds: Commands, mut zones: ResMut<Zones>, assets: Res<Assets>) {
+fn init_zone(mut cmds: Commands, mut zones: ResMut<Zones>, assets: Res<MyAssets>) {
     let zone: Zone = [0, 0].into();
     let pop: Population = zone.into();
     // println!("init pop: {:#?}", pop);
@@ -319,7 +309,7 @@ fn spawn_zones(
     mut cmds: Commands,
     q: Query<&Transform, With<SpaceShip>>,
     mut zones: ResMut<Zones>,
-    assets: Res<Assets>,
+    assets: Res<MyAssets>,
 ) {
     let Ok(player) = q.get_single() else {
         return;

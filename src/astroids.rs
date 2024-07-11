@@ -1,15 +1,15 @@
 use bevy::prelude::*;
+use bevy::sprite::MaterialMesh2dBundle;
 use bevy_xpbd_2d::prelude::*;
 
 use rand::Rng;
 
-use crate::assets::Assets;
+use crate::assets::MyAssets;
 // use crate::collide::Collider;
 use crate::collide::CollisionDamage;
 use crate::collide::HomeMadeCollider;
 use crate::health::Health;
 use crate::movement::MovingObj;
-use crate::movement::Velocity;
 use crate::schedule::InGameSet;
 use crate::zones::Extra;
 use crate::zones::IntoMovingBundle;
@@ -44,7 +44,7 @@ impl Astroid {
 
     fn spawn(
         &self,
-        assets: &Res<Assets>,
+        assets: &Res<MyAssets>,
         particles: impl Iterator<Item = (Vec2, Vec2)>,
         cmds: &mut Commands,
     ) {
@@ -110,7 +110,7 @@ fn rotate_astriods(mut q: Query<&mut Transform, With<Astroid>>, time: Res<Time>)
 fn split_dead(
     mut cmds: Commands,
     q: Query<(&Health, &Transform, &LinearVelocity, &Astroid)>,
-    assets: Res<Assets>,
+    assets: Res<MyAssets>,
 ) {
     for (health, &transform, &velocity, astriod) in q.iter() {
         if **health > 0 {
@@ -153,7 +153,6 @@ fn explode_veclocity(origin_velocity: Vec2, n: usize) -> Vec<Vec2> {
 
 impl Extra for Astroid {
     type Extras = (
-        Astroid,
         Health,
         (Collider, HomeMadeCollider),
         CollisionDamage,
@@ -161,9 +160,8 @@ impl Extra for Astroid {
         RigidBody,
     );
 
-    fn extra(self) -> Self::Extras {
+    fn extra(&self) -> Self::Extras {
         (
-            self,
             self.health(),
             self.collider(),
             self.damage(),
@@ -174,8 +172,18 @@ impl Extra for Astroid {
 }
 
 impl Stage for Astroid {
-    fn stage(&self, assets: &Res<Assets>, transform: Transform) -> SceneBundle {
+    fn stage(
+        self,
+        assets: &Res<MyAssets>, //
+        transform: Transform,
+    ) -> impl Bundle {
         let transform = transform.with_scale(self.scale());
+        // let model2d = MaterialMesh2dBundle {
+        //     mesh: meshes.add(shape).into(),
+        //     transform: transform.with_scale([1.0, -1.5, 1.0].into()),
+        //     material: materials.add(Color::PURPLE),
+        //     ..default()
+        // };
         SceneBundle {
             transform,
             scene: assets.astriod.clone(),
