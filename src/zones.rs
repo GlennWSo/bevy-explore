@@ -56,15 +56,16 @@ pub trait IntoMovingBundle {
 impl<C, T> IntoMovingBundle for T
 where
     C: Bundle + Sized,
-    T: Extra<Extras = C> + Stage + Copy,
+    T: Extra<Extras = C> + Stage + Copy + Bundle,
 {
     type Extras = C;
 
     fn bundle(self, assets: &Res<MyAssets>, transform: Transform, velocity: Vec2) -> impl Bundle {
         (
+            self.extra(),
             self.stage(assets, transform),
             LinearVelocity(velocity),
-            self.extra(),
+            self,
         )
     }
 }
@@ -98,7 +99,7 @@ impl Population {
                         // let velocity = Velocity::default();
                         let velocity = Astroid::random_velocity();
                         let transform = Transform::from_translation(coord.extend(0.0));
-                        (*astriod, astriod.bundle(&assets, transform, velocity))
+                        astriod.bundle(&assets, transform, velocity)
                     }
                 })
                 .collect();
