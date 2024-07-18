@@ -112,7 +112,7 @@ fn shield_ctrl(
 
 // type ShipQuery = Query<(&mut Transform, &mut Velocity), With<SpaceShip>>;
 fn ship_movement_ctrl(
-    mut q: Query<(&mut Transform, &mut Velocity), With<SpaceShip>>,
+    mut q: Query<(&mut Transform, &mut LinearVelocity), With<SpaceShip>>,
     key_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
 ) {
@@ -153,27 +153,33 @@ fn spawn_spaceship(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    let mut transform = Transform::from_xyz(0., 10., 0.);
     // transform.rotate_local_x(90.0f32.to_radians());
     // transform.rotate_x(90.0f32.to_radians());
+    let mut shape = Triangle2d::default();
+    shape.vertices.iter_mut().for_each(|v| {
+        v.y = -v.y;
+    });
+    let mut scale = [1., 1.5, 1.0_f32].into();
+    scale *= 5.0;
+    let mut transform = Transform::from_xyz(0., 10., 0.).with_scale(scale);
     transform.rotate_z(PI);
-    let shape = Triangle2d::default();
+
     let model2d = MaterialMesh2dBundle {
         mesh: meshes.add(shape).into(),
-        transform: transform.with_scale([1.0, -1.5, 1.0].into()),
+        transform,
         material: materials.add(Color::PURPLE),
         ..default()
     };
 
-    let derp = HomeMadeCollider::new(4.0);
-    let collider = Collider::circle(4.0);
+    // let derp = HomeMadeCollider::new(4.0);
+    let collider: Collider = shape.into();
     let ship = (
-        Velocity::default(),
-        // collider,
-        // RigidBody::Kinematic,
+        // Velocity::default(),
+        RigidBody::Dynamic,
+        LockedAxes::ROTATION_LOCKED,
         model2d,
         collider,
-        derp,
+        // derp,
         Player,
         SpaceShip,
         MissleLauncher::new(0.05),
@@ -195,7 +201,7 @@ enum WeponState {
 
 fn ship_weapon_ctrl(
     mut cmds: Commands,
-    mut q: Query<(&Transform, &Velocity, &mut MissleLauncher), With<SpaceShip>>,
+    mut q: Query<(&Transform, &LinearVelocity, &mut MissleLauncher), With<SpaceShip>>,
     btn_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
     assets: Res<MyAssets>,
@@ -220,7 +226,7 @@ fn ship_weapon_ctrl(
         }
     }
 
-    let mut transform = *ship_transform;
+    let mut transform = ship_transform.with_scale(Vec3::ONE);
     let velocity: Velocity = (-transform.up().truncate() * Missle::SPEED + **ship_velocity).into();
     transform.translation -= Missle::FORWARD_OFFSET * *ship_transform.up();
     // transform.rotate_local_y(90.0_f32.to_radians());
@@ -254,7 +260,7 @@ fn ship_weapon_ctrl(
         collider,
         velocity,
         model2d,
-        HomeMadeCollider::new(0.1),
+        // HomeMadeCollider::new(0.1),
         Missle,
         Health {
             life: Missle::HEALTH,
