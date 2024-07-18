@@ -51,7 +51,7 @@ struct Shield;
 pub struct Missle;
 
 impl Missle {
-    const SPEED: f32 = 50.0;
+    const SPEED: f32 = 80.0;
     const FORWARD_OFFSET: f32 = 7.5;
     const HEALTH: i32 = 1;
     const DAMAGE: i32 = 10;
@@ -145,7 +145,7 @@ fn ship_movement_ctrl(
     transform.rotate_z(rotation * dt);
     transform.rotate_local_y(-roll * dt);
 
-    velocity.0 += -dbg!(transform.up()).truncate() * movement * dt;
+    velocity.0 += -(transform.up()).truncate() * movement * dt;
 }
 
 fn spawn_spaceship(
@@ -225,9 +225,11 @@ fn ship_weapon_ctrl(
     transform.translation -= Missle::FORWARD_OFFSET * *ship_transform.up();
     // transform.rotate_local_y(90.0_f32.to_radians());
 
+    let shape = Capsule2d::new(0.5, 2.);
+    let collider = Collider::capsule(0.5, 0.2);
     let model2d = MaterialMesh2dBundle {
-        mesh: meshes.add(Capsule2d::new(0.5, 2.)).into(),
-        transform: transform.with_scale(Vec3::splat(1.)),
+        mesh: meshes.add(shape).into(),
+        transform,
         material: materials.add(Color::PURPLE),
         ..default()
     };
@@ -249,6 +251,7 @@ fn ship_weapon_ctrl(
     // assets.pop.as_any()
     let missle = (
         // moving_obj,
+        collider,
         velocity,
         model2d,
         HomeMadeCollider::new(0.1),

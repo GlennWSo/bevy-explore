@@ -1,11 +1,13 @@
 use bevy::prelude::*;
+#[allow(unused)]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_xpbd_2d::prelude::*;
 
 use learn_bevy::{
     assets::AssetPlug, astroids::AstriodPlug, camera::CameraPlugin, collide::CollidePlugin,
-    despawn::DespawnPlugin, health::HealthPlugin, movement::MovePlug, schedule::SchedulePlugin,
-    ship::ShipPlug, state::StatePlugin, zones::ZonePlugin,
+    collide_dmg::CollideDamagePlugin, despawn::DespawnPlugin, health::HealthPlugin,
+    movement::MovePlug, schedule::SchedulePlugin, ship::ShipPlug, state::StatePlugin,
+    zones::ZonePlugin,
 };
 
 fn main() {
@@ -29,6 +31,8 @@ fn main() {
 
     app
         //.add_plugins(WorldInspectorPlugin::new())
+        // .add_plugins(DebugPlug)
+        .add_plugins(CollideDamagePlugin)
         .add_plugins(StatePlugin)
         .add_plugins(SchedulePlugin)
         .add_plugins(AssetPlug)
@@ -36,7 +40,6 @@ fn main() {
         .add_plugins(ShipPlug)
         .add_plugins(AstriodPlug)
         .add_plugins(MovePlug)
-        // .add_plugins(DebugPlug)
         .add_plugins(DespawnPlugin)
         .add_plugins(CollidePlugin)
         .add_plugins(ZonePlugin)

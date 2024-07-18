@@ -136,6 +136,6 @@ fn apply_collision_dmg(
             continue;
         };
 
-        **health -= **dmg;
+        // **health -= **dmg;
     }
 }
