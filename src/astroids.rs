@@ -10,7 +10,6 @@ use crate::assets::MyAssets;
 use crate::collide::CollisionDamage;
 use crate::collide::HomeMadeCollider;
 use crate::health::Health;
-use crate::movement::MovingObj;
 use crate::schedule::InGameSet;
 use crate::zones::Extra;
 use crate::zones::IntoMovingBundle;
@@ -205,7 +204,6 @@ impl From<AstriodBundle> for Astroid {
 
 #[derive(Bundle)]
 struct AstriodBundle {
-    mover: MovingObj,
     astriod: Astroid,
     damage: CollisionDamage,
     health: Health,

@@ -8,10 +8,9 @@ use bevy::sprite::MaterialMesh2dBundle;
 // use bevy::input::InputSystem
 
 use crate::assets::MyAssets;
-use crate::collide::{CollisionDamage, HomeMadeCollider};
+use crate::collide::CollisionDamage;
 use crate::despawn::{despawn_far, Keep};
 use crate::health::{DeathCry, Health};
-use crate::movement::{MovingObj, Velocity};
 use crate::schedule::InGameSet;
 use crate::state::GameState;
 
@@ -174,6 +173,9 @@ fn spawn_spaceship(
 
     // let derp = HomeMadeCollider::new(4.0);
     let collider: Collider = shape.into();
+    let mut camera = Camera2dBundle::default();
+    camera.transform.rotate_z(180.0_f32.to_radians());
+    camera.projection.scale = 0.1;
     let ship = (
         // Velocity::default(),
         RigidBody::Dynamic,
@@ -192,7 +194,13 @@ fn spawn_spaceship(
         CollisionDamage(SHIP_COLLISION_DAMAGE),
         Name::new("PlayerShip"),
     );
-    cmds.spawn(ship);
+    let entity1 = cmds.spawn(ship).id();
+
+    // let entity2 = cmds
+    //     .spawn((camera, Keep, RigidBody::Dynamic, Collider::circle(0.1)))
+    //     .id();
+    // let joint = FixedJoint::new(entity1, entity2);
+    // cmds.spawn(joint);
 }
 
 enum WeponState {

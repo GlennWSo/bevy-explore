@@ -12,12 +12,7 @@ use rand::prelude::{Rng, SliceRandom};
 use rand_pcg::Pcg64;
 use rand_seeder::Seeder;
 
-use crate::{
-    assets::MyAssets,
-    astroids::Astroid,
-    movement::{MovingObj, Velocity},
-    schedule::InGameSet,
-};
+use crate::{assets::MyAssets, astroids::Astroid, schedule::InGameSet};
 
 pub struct ZonePlugin;
 

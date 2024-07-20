@@ -6,8 +6,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use learn_bevy::{
     assets::AssetPlug, astroids::AstriodPlug, camera::CameraPlugin, collide::CollidePlugin,
     collide_dmg::CollideDamagePlugin, despawn::DespawnPlugin, health::HealthPlugin,
-    movement::MovePlug, schedule::SchedulePlugin, ship::ShipPlug, state::StatePlugin,
-    zones::ZonePlugin,
+    schedule::SchedulePlugin, ship::ShipPlug, state::StatePlugin, zones::ZonePlugin,
 };
 
 fn main() {
@@ -29,8 +28,7 @@ fn main() {
     .add_plugins(PhysicsPlugins::default())
     .insert_resource(Gravity(Vec2::ZERO));
 
-    app
-        //.add_plugins(WorldInspectorPlugin::new())
+    app.add_plugins(WorldInspectorPlugin::new())
         // .add_plugins(DebugPlug)
         .add_plugins(CollideDamagePlugin)
         .add_plugins(StatePlugin)

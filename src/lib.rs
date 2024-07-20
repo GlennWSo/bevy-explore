@@ -7,7 +7,6 @@ pub mod collide;
 pub mod collide_dmg;
 pub mod despawn;
 pub mod health;
-pub mod movement;
 pub mod schedule;
 pub mod ship;
 pub mod state;

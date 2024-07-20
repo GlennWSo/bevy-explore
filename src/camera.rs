@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{despawn::Keep, movement::Velocity, schedule::InGameSet, ship::SpaceShip};
+use crate::{despawn::Keep, schedule::InGameSet, ship::SpaceShip};
 
 const CAM_DISTANCE: f32 = 140.;
 
@@ -31,7 +31,7 @@ fn fallow_player(
     }
 }
 
-fn spawn_camera(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn spawn_camera(mut commands: Commands) {
     // let camera = Camera3dBundle {
     //     transform: Transform::from_xyz(0., 0., CAM_DISTANCE).looking_at(Vec3::ZERO, Vec3::Y),
     //     ..Default::default()
@@ -42,6 +42,5 @@ fn spawn_camera(mut commands: Commands, asset_server: Res<AssetServer>) {
     // let camera = Camera2dBundle::new_with_far(120.);
     let mut camera = Camera2dBundle::default();
     camera.projection.scale = 0.1;
-    let velocity = Velocity::default();
-    commands.spawn((camera, Keep, velocity));
+    commands.spawn((camera, Keep));
 }
