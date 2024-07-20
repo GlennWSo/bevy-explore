@@ -12,11 +12,11 @@ impl Plugin for CollideDamagePlugin {
 }
 
 fn collision_damage(
-    mut collision_event_reader: EventReader<CollisionStarted>,
+    mut collision_event_reader: EventReader<CollisionEnded>,
     mut health_q: Query<&mut Health>,
     damage_q: Query<&CollisionDamage>,
 ) {
-    for CollisionStarted(ent1, ent2) in collision_event_reader.read() {
+    for CollisionEnded(ent1, ent2) in collision_event_reader.read() {
         let ent1 = *ent1;
         let ent2 = *ent2;
         if let (Ok(dmg), Ok(mut health)) = (damage_q.get(ent1), health_q.get_mut(ent2)) {
