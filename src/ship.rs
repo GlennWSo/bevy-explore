@@ -257,6 +257,8 @@ fn ship_weapon_ctrl(
     // assets.pop.as_any()
     let missle = (
         // moving_obj,
+        ColliderDensity(50.0),
+        RigidBody::Dynamic,
         collider,
         velocity,
         model2d,
