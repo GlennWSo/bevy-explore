@@ -39,7 +39,7 @@ fn main() {
         .add_plugins(HealthPlugin)
         .add_plugins(ShipPlug)
         .add_plugins(AstriodPlug)
-        .add_plugins(MovePlug)
+        // .add_plugins(MovePlug)
         .add_plugins(DespawnPlugin)
         .add_plugins(CollidePlugin)
         .add_plugins(ZonePlugin)

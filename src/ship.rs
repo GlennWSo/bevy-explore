@@ -228,7 +228,8 @@ fn ship_weapon_ctrl(
     }
 
     let mut transform = ship_transform.with_scale(Vec3::ONE);
-    let velocity: Velocity = (-transform.up().truncate() * Missle::SPEED + **ship_velocity).into();
+    let velocity: LinearVelocity =
+        (-transform.up().truncate() * Missle::SPEED + **ship_velocity).into();
     transform.translation -= Missle::FORWARD_OFFSET * *ship_transform.up();
     // transform.rotate_local_y(90.0_f32.to_radians());
 
