@@ -1,5 +1,5 @@
+use avian2d::prelude::*;
 use bevy::{log::tracing_subscriber::fmt::time::Uptime, prelude::*};
-use bevy_xpbd_2d::prelude::*;
 
 use crate::{astroids::Astroid, collide::CollisionDamage, health::Health};
 
@@ -12,11 +12,11 @@ impl Plugin for CollideDamagePlugin {
 }
 
 fn collision_damage(
-    mut collision_event_reader: EventReader<CollisionEnded>,
+    mut collision_event_reader: EventReader<CollisionStarted>,
     mut health_q: Query<&mut Health>,
     damage_q: Query<&CollisionDamage>,
 ) {
-    for CollisionEnded(ent1, ent2) in collision_event_reader.read() {
+    for CollisionStarted(ent1, ent2) in collision_event_reader.read() {
         let ent1 = *ent1;
         let ent2 = *ent2;
         if let (Ok(dmg), Ok(mut health)) = (damage_q.get(ent1), health_q.get_mut(ent2)) {

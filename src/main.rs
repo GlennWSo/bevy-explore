@@ -1,7 +1,7 @@
+use avian2d::prelude::*;
 use bevy::prelude::*;
 #[allow(unused)]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_xpbd_2d::prelude::*;
 
 use learn_bevy::{
     assets::AssetPlug, astroids::AstriodPlug, camera::CameraPlugin, collide::CollidePlugin,

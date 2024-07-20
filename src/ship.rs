@@ -1,9 +1,10 @@
 use std::f32::consts::PI;
 
+use avian2d::prelude::*;
 use bevy::audio::Volume;
+use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
-use bevy_xpbd_2d::prelude::*;
 // use bevy::input::InputSystem
 
 use crate::assets::MyAssets;
@@ -163,11 +164,11 @@ fn spawn_spaceship(
     scale *= 5.0;
     let mut transform = Transform::from_xyz(0., 10., 0.).with_scale(scale);
     transform.rotate_z(PI);
-
+    let color: Color = css::BLUE.into();
     let model2d = MaterialMesh2dBundle {
         mesh: meshes.add(shape).into(),
         transform,
-        material: materials.add(Color::PURPLE),
+        material: materials.add(color),
         ..default()
     };
 
@@ -233,10 +234,11 @@ fn ship_weapon_ctrl(
 
     let shape = Capsule2d::new(0.5, 2.);
     let collider = Collider::capsule(0.5, 0.2);
+    let color: Color = css::PURPLE.into();
     let model2d = MaterialMesh2dBundle {
         mesh: meshes.add(shape).into(),
         transform,
-        material: materials.add(Color::PURPLE),
+        material: materials.add(color),
         ..default()
     };
 

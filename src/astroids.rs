@@ -1,7 +1,7 @@
+use avian2d::prelude::*;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 use bevy::sprite::Mesh2dHandle;
-use bevy_xpbd_2d::prelude::*;
 
 use rand::Rng;
 

@@ -2,11 +2,12 @@ use crate::ship::Player;
 use crate::ship::SpaceShip;
 use std::ops::Add;
 
+// use avian2d::components::LinearVelocity;
+// use avian2d::components::RigidBody;
+use avian2d::prelude::*;
 use bevy::prelude::SceneBundle;
 use bevy::prelude::*;
 use bevy::{prelude::*, utils::HashMap};
-use bevy_xpbd_2d::components::LinearVelocity;
-use bevy_xpbd_2d::components::RigidBody;
 use rand::prelude::{Rng, SliceRandom};
 use rand_pcg::Pcg64;
 use rand_seeder::Seeder;

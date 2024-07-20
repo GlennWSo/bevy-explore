@@ -14,14 +14,14 @@ opt-level = 1
 opt-level = 3
 
 [dependencies]
-rand = "0.8.5"
-bevy = { version = "0.13.0", features = ["mp3", "png", "wav", "wayland"] }
-rand_pcg = "0.3.1"
-rand_seeder = "0.2.3"
-rand_distr = "0.4.3"
-bevy-inspector-egui = "0.24.0"
-bevy_xpbd_2d = "0.4.2"
+rand = "0.8.*"
+bevy = { version = "0.14.*", features = ["mp3", "png", "wav", "wayland"] }
+rand_pcg = "0.3.*"
+rand_seeder = "0.2.*"
+rand_distr = "0.4.*"
+bevy-inspector-egui = "0.25.*"
+avian2d = "0.1.*"
 
 # dynamic_linking speeds builds alot but is best to remove before final release to enbale standalone 
 [target.x86_64-unknown-linux-gnu.dependencies]
-bevy = { version = "0.13.0", features = ["dynamic_linking"] }
+bevy = { version = "0.14.*", features = ["dynamic_linking"] }
