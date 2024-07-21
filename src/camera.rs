@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use crate::{despawn::Keep, schedule::InGameSet, ship::SpaceShip};
 
 // const CAM_DISTANCE: f32 = 140.;
-const CHASE_FACTOR: f32 = 5.0;
+const CHASE_FACTOR: f32 = 1.0;
 
 pub struct CameraPlugin;
 
@@ -38,9 +38,9 @@ fn fallow_player(
         let z = camera.translation.z;
         let target = Vec3 { x, y, z };
         let dt = time.delta_seconds();
-        camera.translation = camera.translation.lerp(target, dt * CHASE_FACTOR);
-        // camera.translation[0] = player.translation[0];
-        // camera.translation[1] = player.translation[1];
+        // camera.translation = camera.translation.lerp(target, dt * CHASE_FACTOR);
+        camera.translation[0] = player.translation[0];
+        camera.translation[1] = player.translation[1];
     }
 }
 
