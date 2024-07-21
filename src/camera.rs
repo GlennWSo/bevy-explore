@@ -1,15 +1,22 @@
+use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{despawn::Keep, schedule::InGameSet, ship::SpaceShip};
 
-const CAM_DISTANCE: f32 = 140.;
+// const CAM_DISTANCE: f32 = 140.;
+const CHASE_FACTOR: f32 = 5.0;
 
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_camera);
-        app.add_systems(Update, fallow_player.after(InGameSet::EntityUpdate));
+        app.add_systems(
+            PostUpdate,
+            fallow_player
+                .after(PhysicsSet::Sync)
+                .before(TransformSystem::TransformPropagate),
+        );
         // app.insert_resource(ClearColor(Color::rgb(0.1, 0., 0.15)));
         app.insert_resource(AmbientLight {
             color: Color::default(),
@@ -21,11 +28,17 @@ impl Plugin for CameraPlugin {
 fn fallow_player(
     mut q: Query<&mut Transform, With<Camera>>,
     q_player: Query<&Transform, (Without<Camera>, With<SpaceShip>)>,
+    time: Res<Time>,
 ) {
-    let camera = q.get_single_mut();
     let player = q_player.get_single();
+    let camera = q.get_single_mut();
 
     if let (Ok(mut camera), Ok(player)) = (camera, player) {
+        let Vec3 { x, y, .. } = player.translation;
+        let z = camera.translation.z;
+        let target = Vec3 { x, y, z };
+        let dt = time.delta_seconds();
+        // camera.translation = camera.translation.lerp(target, dt * CHASE_FACTOR);
         camera.translation[0] = player.translation[0];
         camera.translation[1] = player.translation[1];
     }

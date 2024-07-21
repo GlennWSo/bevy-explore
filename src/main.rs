@@ -12,9 +12,6 @@ use learn_bevy::{
 fn main() {
     let mut app = App::new();
 
-    // #[cfg(not(target_arch = "wasm32"))]
-    // app.add_plugins(DefaultPlugins);
-
     // #[cfg(target_arch = "wasm32")]
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
@@ -25,12 +22,14 @@ fn main() {
         }),
         ..default()
     }))
-    .add_plugins(PhysicsPlugins::default())
+    .add_plugins(PhysicsPlugins::default().with_length_unit(1.))
     .insert_resource(Gravity(Vec2::ZERO));
 
-    app.add_plugins(WorldInspectorPlugin::new())
-        // .add_plugins(DebugPlug)
-        .add_plugins(CollideDamagePlugin)
+    // #[cfg(not(target_arch = "wasm32"))]
+    // app.add_plugins(WorldInspectorPlugin::new());
+
+    // .add_plugins(DebugPlug)
+    app.add_plugins(CollideDamagePlugin)
         .add_plugins(StatePlugin)
         .add_plugins(SchedulePlugin)
         .add_plugins(AssetPlug)
