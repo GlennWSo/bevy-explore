@@ -38,9 +38,9 @@ fn fallow_player(
         let z = camera.translation.z;
         let target = Vec3 { x, y, z };
         let dt = time.delta_seconds();
-        // camera.translation = camera.translation.lerp(target, dt * CHASE_FACTOR);
-        camera.translation[0] = player.translation[0];
-        camera.translation[1] = player.translation[1];
+        camera.translation = camera.translation.lerp(target, dt * CHASE_FACTOR);
+        // camera.translation[0] = player.translation[0];
+        // camera.translation[1] = player.translation[1];
     }
 }
 
