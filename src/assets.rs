@@ -3,7 +3,7 @@ use bevy::{math::primitives::Circle, prelude::*};
 
 #[derive(Resource, Default)]
 pub struct MyAssets {
-    pub astriod: Handle<Scene>,
+    pub astriod: Handle<Image>,
     pub ship: Handle<Scene>,
     pub missles: Handle<Scene>,
     pub pop: Handle<AudioSource>,
@@ -27,7 +27,8 @@ fn setup(
     let laser_color_handle = colors.add(laser_color);
 
     *assets = MyAssets {
-        astriod: asset_server.load("Planet.glb#Scene0"),
+        astriod: asset_server.load("baren.png"),
+        // astriod: asset_server.load("Planet.glb#Scene0"),
         ship: asset_server.load("Spaceship.glb#Scene0"),
         missles: asset_server.load("BulletsPickup.glb#Scene0"),
         pop: asset_server.load("ball_tap2073.wav"),

@@ -178,14 +178,23 @@ impl Stage for Astroid {
         transform: Transform,
     ) -> impl Bundle {
         let transform = transform.with_scale(self.scale());
-        let mesh = Mesh2dHandle(assets.ball.clone());
-        let model2d = MaterialMesh2dBundle {
-            mesh,
+        // let mesh = Mesh2dHandle(assets.ball.clone());
+        let model2d = SpriteBundle {
             transform,
-            material: assets.asteroid_material.clone(),
-            visibility: Visibility::Visible,
-            ..Default::default()
+            texture: assets.astriod.clone(),
+            sprite: Sprite {
+                custom_size: Some(Vec2 { x: 2., y: 2. }),
+                ..default()
+            },
+            ..default()
         };
+        // let model2d = MaterialMesh2dBundle {
+        //     mesh,
+        //     transform,
+        //     material: assets.asteroid_material.clone(),
+        //     visibility: Visibility::Visible,
+        //     ..Default::default()
+        // };
         model2d
         // SceneBundle {
         //     transform,
