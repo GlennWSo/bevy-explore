@@ -58,7 +58,8 @@ impl Astroid {
     }
 
     fn damage(&self) -> CollisionDamage {
-        CollisionDamage(self.bulk as i32 * Self::DAMAGE_MOD)
+        // CollisionDamage(self.bulk as i32 * Self::DAMAGE_MOD)
+        CollisionDamage(1)
     }
 
     fn health(&self) -> Health {
@@ -127,7 +128,7 @@ fn split_dead(
             let origin = transform.translation.truncate();
             let c = 0.5;
 
-            let offset = (v - *velocity).normalize() * (shard.radius() * 1. + c);
+            let offset = (v - *velocity).normalize() * (shard.radius() * 1.1 + c);
             let spawn_coord = origin + offset;
             (spawn_coord, v)
         });
