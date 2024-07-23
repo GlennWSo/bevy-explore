@@ -8,6 +8,7 @@ pub struct MyAssets {
     pub missles: Handle<Scene>,
     pub pop: Handle<AudioSource>,
     pub laser_sound: Handle<AudioSource>,
+    pub crack: Handle<AudioSource>,
     pub ball: Handle<Mesh>,
     pub asteroid_material: Handle<ColorMaterial>,
 }
@@ -35,6 +36,7 @@ fn setup(
         laser_sound: asset_server.load("laser-104024.mp3"),
         ball: astroid_mesh,
         asteroid_material: laser_color_handle,
+        crack: asset_server.load("348031__devern__crack.wav"),
     }
 }
 

@@ -133,6 +133,11 @@ fn split_dead(
             (spawn_coord, v)
         });
         shard.spawn(&assets, particles, &mut cmds);
+        let sound = AudioBundle {
+            source: assets.crack.clone(),
+            settings: PlaybackSettings::DESPAWN,
+        };
+        cmds.spawn(sound);
     }
 }
 
