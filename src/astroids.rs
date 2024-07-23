@@ -116,16 +116,21 @@ fn split_dead(
         if **health > 0 {
             continue;
         }
-        let velicities = explode_veclocity(*velocity, astriod.bulk as usize - 1);
+        if astriod.bulk <= 1 {
+            continue;
+        }
+        let velicities = explode_veclocity(*velocity, 2);
+        let shard = Astroid {
+            bulk: astriod.bulk / 2,
+        };
         let particles = velicities.into_iter().map(|v| {
             let origin = transform.translation.truncate();
-            let c = 5.;
-            let offset = v.normalize() * (astriod.bulk as f32 / 1. + c);
+            let c = 0.5;
+            let offset = v.normalize() * (shard.radius() * 2 as f32 + c);
             let spawn_coord = origin + offset;
             (spawn_coord, v)
         });
-        let astroid = Astroid { bulk: 1 };
-        astroid.spawn(&assets, particles, &mut cmds);
+        shard.spawn(&assets, particles, &mut cmds);
     }
 }
 
