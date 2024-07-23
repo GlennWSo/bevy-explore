@@ -36,7 +36,7 @@ fn setup(
         laser_sound: asset_server.load("laser-104024.mp3"),
         ball: astroid_mesh,
         asteroid_material: laser_color_handle,
-        crack: asset_server.load("348031__devern__crack.wav"),
+        crack: asset_server.load("524610__clearwavsound__fruit-crack.wav"),
     }
 }
 
