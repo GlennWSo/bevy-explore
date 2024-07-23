@@ -244,6 +244,8 @@ fn ship_weapon_ctrl(
     let shape = Capsule2d::new(0.5, 2.);
     let collider = Collider::capsule(0.5, 0.2);
     let color: Color = css::PURPLE.into();
+    // let color = color.lighter(10.);
+    let color = Color::srgb(7.5, 1.0, 7.5);
     let model2d = MaterialMesh2dBundle {
         mesh: meshes.add(shape).into(),
         transform,

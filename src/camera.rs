@@ -1,10 +1,13 @@
 use avian2d::prelude::*;
-use bevy::prelude::*;
+use bevy::{
+    core_pipeline::{bloom::BloomSettings, tonemapping::Tonemapping},
+    prelude::*,
+};
 
-use crate::{despawn::Keep, schedule::InGameSet, ship::SpaceShip};
+use crate::{despawn::Keep, ship::SpaceShip};
 
 // const CAM_DISTANCE: f32 = 140.;
-const CHASE_FACTOR: f32 = 1.0;
+// const CHASE_FACTOR: f32 = 1.0;
 
 pub struct CameraPlugin;
 
@@ -45,15 +48,15 @@ fn fallow_player(
 }
 
 fn spawn_camera(mut commands: Commands) {
-    // let camera = Camera3dBundle {
-    //     transform: Transform::from_xyz(0., 0., CAM_DISTANCE).looking_at(Vec3::ZERO, Vec3::Y),
-    //     ..Default::default()
-    // };
-
-    // let mut camera = Camera2dBundle::new_with_far(100.0);
-    // camera.projection.scale = 0.1;
-    // let camera = Camera2dBundle::new_with_far(120.);
-    let mut camera = Camera2dBundle::default();
+    let mut camera = Camera2dBundle {
+        camera: Camera {
+            hdr: true,
+            ..default()
+        },
+        tonemapping: Tonemapping::TonyMcMapface,
+        ..Default::default()
+    };
+    let bloom = BloomSettings::default();
     camera.projection.scale = 0.1;
-    commands.spawn((camera, Keep));
+    commands.spawn((camera, Keep, bloom));
 }
