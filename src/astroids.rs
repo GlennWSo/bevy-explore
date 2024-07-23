@@ -126,7 +126,8 @@ fn split_dead(
         let particles = velicities.into_iter().map(|v| {
             let origin = transform.translation.truncate();
             let c = 0.5;
-            let offset = v.normalize() * (shard.radius() * 2 as f32 + c);
+
+            let offset = (v - *velocity).normalize() * (shard.radius() * 1. + c);
             let spawn_coord = origin + offset;
             (spawn_coord, v)
         });
@@ -148,8 +149,8 @@ fn explode_veclocity(origin_velocity: Vec2, n: usize) -> Vec<Vec2> {
             // let speed_mod = 1.;
             // let angle_mod = 1.;
             let speed_mod = rng.gen_range(0.8..1.25);
-            let angle_mod = rng.gen_range(0.8..1.25);
-            let rot = Quat::from_rotation_z(section_angle.to_radians() * angle_mod);
+            // let angle_mod = rng.gen_range(0.8..1.25);
+            let rot = Quat::from_rotation_z(section_angle.to_radians());
             v = rot.mul_vec3(v);
             v.truncate() * speed_mod + origin_velocity
         })
