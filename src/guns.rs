@@ -4,6 +4,7 @@ use bevy::{audio::Volume, color::palettes::css, prelude::*, sprite::MaterialMesh
 use crate::{
     assets::MyAssets,
     collide::CollisionDamage,
+    despawn::despawn_far,
     health::{DeathCry, Health},
     schedule::InGameSet,
     ship::Player,
@@ -17,7 +18,8 @@ impl Plugin for GunPlugin {
             Update,
             cooldown_guns::<PlasmaGun>.in_set(InGameSet::EntityUpdate),
         )
-        .add_systems(Update, ship_weapon_ctrl.in_set(InGameSet::UI));
+        .add_systems(Update, ship_weapon_ctrl.in_set(InGameSet::UI))
+        .add_systems(Update, despawn_far::<Plasma, 10_000>);
     }
 }
 
@@ -107,12 +109,9 @@ fn ship_weapon_ctrl(
     let velocity: LinearVelocity =
         (-transform.up().truncate() * Plasma::SPEED + **ship_velocity).into();
     transform.translation -= Plasma::FORWARD_OFFSET * *ship_transform.up();
-    // transform.rotate_local_y(90.0_f32.to_radians());
 
     let shape = Capsule2d::new(0.5, 2.);
     let collider = Collider::capsule(0.5, 0.2);
-    let color: Color = css::PURPLE.into();
-    // let color = color.lighter(10.);
     let color = Color::srgb(7.5, 1.0, 7.5);
     let model2d = MaterialMesh2dBundle {
         mesh: meshes.add(shape).into(),
@@ -134,8 +133,6 @@ fn ship_weapon_ctrl(
     // audio
 
     cmds.spawn(pew_sound);
-    // let death_cry = Some(assets.pop.clone());
-    // assets.pop.as_any()
     let missle = (
         // moving_obj,
         plasma,
