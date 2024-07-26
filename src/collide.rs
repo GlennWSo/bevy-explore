@@ -2,12 +2,8 @@ use std::ops::Deref;
 
 use bevy::{prelude::*, utils::HashMap};
 
-use crate::{
-    astroids::Astroid,
-    health::Health,
-    schedule::InGameSet,
-    ship::{Missle, SpaceShip},
-};
+use crate::guns::Plasma;
+use crate::{astroids::Astroid, health::Health, schedule::InGameSet, ship::SpaceShip};
 
 pub struct CollidePlugin;
 
@@ -24,7 +20,7 @@ impl Plugin for CollidePlugin {
                     (
                         handle_collisions::<SpaceShip>,
                         handle_collisions::<Astroid>,
-                        handle_collisions::<Missle>,
+                        handle_collisions::<Plasma>,
                     ),
                     apply_collision_dmg,
                 )

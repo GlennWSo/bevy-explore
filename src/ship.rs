@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use avian2d::prelude::*;
-use bevy::audio::Volume;
+use bevy::audio::{Sample, Volume};
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
@@ -10,6 +10,7 @@ use bevy::sprite::MaterialMesh2dBundle;
 use crate::assets::MyAssets;
 use crate::collide::CollisionDamage;
 use crate::despawn::{despawn_far, Keep};
+use crate::guns::PlasmaGun;
 use crate::health::{DeathCry, Health};
 use crate::schedule::InGameSet;
 use crate::state::GameState;
@@ -29,11 +30,8 @@ impl Plugin for ShipPlug {
         app.add_systems(OnExit(GameState::GameOver), spawn_spaceship);
         app.add_systems(
             Update,
-            (ship_movement_ctrl, ship_weapon_ctrl, shield_ctrl)
-                .chain()
-                .in_set(InGameSet::UI),
+            (ship_movement_ctrl, shield_ctrl).in_set(InGameSet::UI),
         )
-        .add_systems(Update, despawn_far::<Missle, 1000>)
         .add_systems(Update, end_player);
     }
 }
@@ -46,55 +44,6 @@ pub struct Player;
 
 #[derive(Component, Debug)]
 struct Shield;
-
-#[derive(Component)]
-pub struct Missle;
-
-impl Missle {
-    const SPEED: f32 = 80.0;
-    const FORWARD_OFFSET: f32 = 7.5;
-    const HEALTH: i32 = 1;
-    const DAMAGE: i32 = 10;
-}
-#[derive(Component)]
-struct MissleLauncher {
-    cooldown: f32,
-    ready: WeponState,
-}
-
-impl MissleLauncher {
-    const START_RATE: f32 = 0.02;
-    /// fire rate from seconds interval
-    fn new(cooldown: f32) -> Self {
-        assert!(cooldown >= 0.0);
-        Self {
-            cooldown,
-            ready: WeponState::Ready,
-        }
-    }
-    fn fire(&mut self) {
-        self.ready = WeponState::Cooling(self.cooldown);
-    }
-    fn update(&mut self, dt: f32) {
-        match self.ready {
-            WeponState::Ready => {}
-            WeponState::Cooling(mut time_left) => {
-                time_left -= dt;
-                if time_left < 0. {
-                    self.ready = WeponState::Ready;
-                } else {
-                    self.ready = WeponState::Cooling(time_left)
-                }
-            }
-        }
-    }
-}
-
-impl Default for MissleLauncher {
-    fn default() -> Self {
-        Self::new(Self::START_RATE)
-    }
-}
 
 fn shield_ctrl(
     mut cmds: Commands,
@@ -185,7 +134,7 @@ fn spawn_spaceship(
         // derp,
         Player,
         SpaceShip,
-        MissleLauncher::new(0.05),
+        PlasmaGun::new(0.07),
         Keep,
         Health {
             life: SHIP_HEALTH,
@@ -203,88 +152,7 @@ fn spawn_spaceship(
     // cmds.spawn(joint);
 }
 
-enum WeponState {
-    Ready,
-    Cooling(f32),
-}
-
-fn ship_weapon_ctrl(
-    mut cmds: Commands,
-    mut q: Query<(&Transform, &LinearVelocity, &mut MissleLauncher), With<SpaceShip>>,
-    btn_input: Res<ButtonInput<KeyCode>>,
-    time: Res<Time>,
-    assets: Res<MyAssets>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    if !btn_input.pressed(KeyCode::Space) {
-        return;
-    }
-    // println!("Fire at will!");
-
-    let Ok((ship_transform, ship_velocity, mut missle_launcher)) = q.get_single_mut() else {
-        return;
-    };
-
-    match missle_launcher.ready {
-        WeponState::Ready => missle_launcher.fire(),
-        WeponState::Cooling(_time_remaining) => {
-            let dt = time.delta_seconds();
-            missle_launcher.update(dt);
-            return;
-        }
-    }
-
-    let mut transform = ship_transform.with_scale(Vec3::ONE);
-    let velocity: LinearVelocity =
-        (-transform.up().truncate() * Missle::SPEED + **ship_velocity).into();
-    transform.translation -= Missle::FORWARD_OFFSET * *ship_transform.up();
-    // transform.rotate_local_y(90.0_f32.to_radians());
-
-    let shape = Capsule2d::new(0.5, 2.);
-    let collider = Collider::capsule(0.5, 0.2);
-    let color: Color = css::PURPLE.into();
-    // let color = color.lighter(10.);
-    let color = Color::srgb(7.5, 1.0, 7.5);
-    let model2d = MaterialMesh2dBundle {
-        mesh: meshes.add(shape).into(),
-        transform,
-        material: materials.add(color),
-        ..default()
-    };
-
-    let settings = PlaybackSettings {
-        mode: bevy::audio::PlaybackMode::Despawn,
-        speed: 1.5,
-        volume: Volume::new(0.3),
-        ..Default::default()
-    };
-    let pew_sound = AudioBundle {
-        source: assets.laser_sound.clone(),
-        settings,
-    };
-    // audio
-
-    cmds.spawn(pew_sound);
-    // let death_cry = Some(assets.pop.clone());
-    // assets.pop.as_any()
-    let missle = (
-        // moving_obj,
-        ColliderDensity(5.0),
-        RigidBody::Dynamic,
-        collider,
-        velocity,
-        model2d,
-        // HomeMadeCollider::new(0.1),
-        Missle,
-        Health {
-            life: Missle::HEALTH,
-            death_cry: DeathCry::Pop,
-        },
-        CollisionDamage(Missle::DAMAGE),
-    );
-    cmds.spawn(missle);
-}
+// struct WeponState(f32);
 
 fn end_player(mut next: ResMut<NextState<GameState>>, q: Query<(), With<SpaceShip>>) {
     if q.get_single().is_err() {
