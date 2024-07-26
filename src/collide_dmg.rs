@@ -1,7 +1,7 @@
 use avian2d::prelude::*;
-use bevy::{log::tracing_subscriber::fmt::time::Uptime, prelude::*};
+use bevy::prelude::*;
 
-use crate::{astroids::Astroid, collide::CollisionDamage, health::Health};
+use crate::health::Health;
 
 pub struct CollideDamagePlugin;
 
@@ -10,6 +10,9 @@ impl Plugin for CollideDamagePlugin {
         app.add_systems(Update, collision_damage);
     }
 }
+
+#[derive(Component, Deref, DerefMut)]
+pub struct CollisionDamage(pub i32);
 
 fn collision_damage(
     mut collision_event_reader: EventReader<CollisionStarted>,

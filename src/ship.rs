@@ -1,17 +1,15 @@
 use std::f32::consts::PI;
 
 use avian2d::prelude::*;
-use bevy::audio::{Sample, Volume};
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 // use bevy::input::InputSystem
 
-use crate::assets::MyAssets;
-use crate::collide::CollisionDamage;
-use crate::despawn::{despawn_far, Keep};
+use crate::collide_dmg::CollisionDamage;
+use crate::despawn::Keep;
 use crate::guns::PlasmaGun;
-use crate::health::{DeathCry, Health};
+use crate::health::Health;
 use crate::schedule::InGameSet;
 use crate::state::GameState;
 
@@ -143,7 +141,7 @@ fn spawn_spaceship(
         CollisionDamage(SHIP_COLLISION_DAMAGE),
         Name::new("PlayerShip"),
     );
-    let entity1 = cmds.spawn(ship).id();
+    let _entity1 = cmds.spawn(ship).id();
 
     // let entity2 = cmds
     //     .spawn((camera, Keep, RigidBody::Dynamic, Collider::circle(0.1)))

@@ -1,14 +1,16 @@
 use avian2d::prelude::*;
-use bevy::{audio::Volume, color::palettes::css, prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{audio::Volume, prelude::*, sprite::MaterialMesh2dBundle};
 
+use crate::collide_dmg::CollisionDamage;
 use crate::{
     assets::MyAssets,
-    collide::CollisionDamage,
     despawn::despawn_far,
     health::{DeathCry, Health},
     schedule::InGameSet,
     ship::Player,
 };
+
+const FORWARD_OFFSET: f32 = 7.5;
 
 pub struct GunPlugin;
 
@@ -24,12 +26,17 @@ impl Plugin for GunPlugin {
 }
 
 #[derive(Component)]
+pub struct NinjaHook;
+
+impl NinjaHook {
+    const SPEED: f32 = 80.0;
+}
+
+#[derive(Component)]
 pub struct Plasma;
 
 impl Plasma {
     const SPEED: f32 = 80.0;
-    const FORWARD_OFFSET: f32 = 7.5;
-    const HEALTH: i32 = 1;
     const DAMAGE: i32 = 10;
 }
 #[derive(Component)]
@@ -41,7 +48,7 @@ pub struct PlasmaGun {
 pub trait Gun {
     type Missle: Component;
     /// dt time since frame
-    fn fire(&mut self) -> Option<Plasma>;
+    fn fire(&mut self) -> Option<Self::Missle>;
     fn cooldown(&mut self, dt: f32);
 }
 
@@ -108,7 +115,7 @@ fn ship_weapon_ctrl(
     let mut transform = ship_transform.with_scale(Vec3::ONE);
     let velocity: LinearVelocity =
         (-transform.up().truncate() * Plasma::SPEED + **ship_velocity).into();
-    transform.translation -= Plasma::FORWARD_OFFSET * *ship_transform.up();
+    transform.translation -= FORWARD_OFFSET * *ship_transform.up();
 
     let shape = Capsule2d::new(0.5, 2.);
     let collider = Collider::capsule(0.5, 0.2);
@@ -143,7 +150,7 @@ fn ship_weapon_ctrl(
         model2d,
         // HomeMadeCollider::new(0.1),
         Health {
-            life: Plasma::HEALTH,
+            life: 1,
             death_cry: DeathCry::Pop,
         },
         CollisionDamage(Plasma::DAMAGE),

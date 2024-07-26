@@ -1,19 +1,18 @@
 use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy::sprite::MaterialMesh2dBundle;
-use bevy::sprite::Mesh2dHandle;
 
 use rand::Rng;
 
 use crate::assets::MyAssets;
+use crate::collide_dmg::CollisionDamage;
 // use crate::collide::Collider;
-use crate::collide::CollisionDamage;
-use crate::collide::HomeMadeCollider;
+// use crate::collide::CollisionDamage;
+// use crate::collide::HomeMadeCollider;
 use crate::health::Health;
 use crate::schedule::InGameSet;
-use crate::zones::Extra;
-use crate::zones::IntoMovingBundle;
-use crate::zones::Stage;
+use crate::stage::Extra;
+use crate::stage::IntoMovingBundle;
+use crate::stage::Stage;
 
 pub struct AstriodPlug;
 
@@ -35,12 +34,11 @@ pub struct Astroid {
 }
 
 impl Astroid {
-    const ROTATION_SPEED: f32 = 1.0;
+    // const ROTATION_SPEED: f32 = 1.0;
     const RADIUS_MOD: f32 = 2.5;
     /// hit point scaling with size
     const LIFE_MOD: i32 = 10;
     /// hit point scaling with size
-    const DAMAGE_MOD: i32 = 5;
 
     fn spawn(
         &self,
@@ -69,8 +67,8 @@ impl Astroid {
         }
     }
 
-    fn collider(&self) -> (Collider, HomeMadeCollider) {
-        (Collider::circle(1.0), HomeMadeCollider::new(self.radius()))
+    fn collider(&self) -> Collider {
+        Collider::circle(1.0)
     }
 
     fn radius(&self) -> f32 {
@@ -97,16 +95,6 @@ fn random_unit_vec(rng: &mut impl Rng) -> Vec2 {
     let y = rng.gen_range(-1.0..1.0);
     Vec2::new(x, y).normalize_or_zero()
 }
-
-fn rotate_astriods(mut q: Query<&mut Transform, With<Astroid>>, time: Res<Time>) {
-    let rot = Astroid::ROTATION_SPEED * time.delta_seconds();
-    for mut trans in q.iter_mut() {
-        trans.rotate_local_z(rot);
-    }
-}
-
-// #[derive(Component, Clone, Copy)]
-// struct Shard;
 
 fn split_dead(
     mut cmds: Commands,
@@ -164,13 +152,7 @@ fn explode_veclocity(origin_velocity: Vec2, n: usize) -> Vec<Vec2> {
 }
 
 impl Extra for Astroid {
-    type Extras = (
-        Health,
-        (Collider, HomeMadeCollider),
-        CollisionDamage,
-        Name,
-        RigidBody,
-    );
+    type Extras = (Health, Collider, CollisionDamage, Name, RigidBody);
 
     fn extra(&self) -> Self::Extras {
         (

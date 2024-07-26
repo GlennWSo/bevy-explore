@@ -24,7 +24,7 @@ fn setup(
     let astroid_shape = Circle::new(1.0);
     let astroid_mesh = meshes.add(astroid_shape);
 
-    let laser_color = Color::rgb(0., 1., 0.);
+    let laser_color = Color::srgb(0., 1., 0.);
     let laser_color_handle = colors.add(laser_color);
 
     *assets = MyAssets {

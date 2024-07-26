@@ -3,13 +3,13 @@
 pub mod assets;
 pub mod astroids;
 pub mod camera;
-pub mod collide;
 pub mod collide_dmg;
 pub mod despawn;
 pub mod guns;
 pub mod health;
 pub mod schedule;
 pub mod ship;
+pub mod stage;
 pub mod state;
 pub mod zones;
 

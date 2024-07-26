@@ -31,16 +31,16 @@ impl Plugin for CameraPlugin {
 fn fallow_player(
     mut q: Query<&mut Transform, With<Camera>>,
     q_player: Query<&Transform, (Without<Camera>, With<SpaceShip>)>,
-    time: Res<Time>,
+    _time: Res<Time>,
 ) {
     let player = q_player.get_single();
     let camera = q.get_single_mut();
 
     if let (Ok(mut camera), Ok(player)) = (camera, player) {
-        let Vec3 { x, y, .. } = player.translation;
-        let z = camera.translation.z;
-        let target = Vec3 { x, y, z };
-        let dt = time.delta_seconds();
+        // let Vec3 { x, y, .. } = player.translation;
+        // let z = camera.translation.z;
+        // let target = Vec3 { x, y, z };
+        // let dt = time.delta_seconds();
         // camera.translation = camera.translation.lerp(target, dt * CHASE_FACTOR);
         camera.translation[0] = player.translation[0];
         camera.translation[1] = player.translation[1];
