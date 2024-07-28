@@ -38,7 +38,9 @@ pub struct Plasma;
 impl Plasma {
     const SPEED: f32 = 80.0;
     const DAMAGE: i32 = 10;
+    const DENSITY: f32 = 5.0;
 }
+
 #[derive(Component)]
 pub struct PlasmaGun {
     fire_interval: f32,
@@ -108,6 +110,26 @@ fn ship_weapon_ctrl(
     };
 
     // let derp = Missle;
+    fire_plasma(
+        plasma_gun,
+        ship_transform,
+        ship_velocity,
+        &mut materials,
+        &mut meshes,
+        &assets,
+        &mut cmds,
+    );
+}
+
+fn fire_plasma(
+    mut plasma_gun: Mut<PlasmaGun>,
+    ship_transform: &Transform,
+    ship_velocity: &LinearVelocity,
+    materials: &mut ResMut<Assets<ColorMaterial>>,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    assets: &Res<MyAssets>,
+    cmds: &mut Commands,
+) {
     let Some(plasma) = plasma_gun.fire() else {
         return;
     };
@@ -120,10 +142,11 @@ fn ship_weapon_ctrl(
     let shape = Capsule2d::new(0.5, 2.);
     let collider = Collider::capsule(0.5, 0.2);
     let color = Color::srgb(7.5, 1.0, 7.5);
+    let material = materials.add(color);
     let model2d = MaterialMesh2dBundle {
         mesh: meshes.add(shape).into(),
         transform,
-        material: materials.add(color),
+        material,
         ..default()
     };
 
@@ -143,7 +166,7 @@ fn ship_weapon_ctrl(
     let missle = (
         // moving_obj,
         plasma,
-        ColliderDensity(5.0),
+        ColliderDensity(Plasma::DENSITY),
         RigidBody::Dynamic,
         collider,
         velocity,
