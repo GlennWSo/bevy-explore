@@ -1,3 +1,4 @@
+#![feature(trait_alias)]
 #![allow(clippy::type_complexity)]
 
 pub mod assets;

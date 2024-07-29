@@ -1,7 +1,9 @@
 use std::marker::PhantomData;
 
 use avian2d::prelude::*;
+use bevy::prelude::Component;
 use bevy::reflect::Tuple;
+use bevy::sprite::Material2d;
 use bevy::{audio::Volume, prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::collide_dmg::CollisionDamage;
@@ -24,10 +26,10 @@ impl Plugin for GunPlugin {
             Update,
             cooldown_guns::<PlasmaGun>.in_set(InGameSet::EntityUpdate),
         )
-        .add_systems(Update, handle_plasma_gun_fire)
+        .add_systems(Update, handle_gun_fire::<PlasmaGun>)
         .add_systems(Update, ship_weapon_ctrl.in_set(InGameSet::UI))
         .add_systems(Update, despawn_far::<Plasma, 10_000>);
-        app.add_event::<GunFire>();
+        app.add_event::<GunFire<PlasmaGun>>();
     }
 }
 
@@ -65,7 +67,36 @@ pub struct PlasmaGun {
     count_down: f32,
 }
 
-impl Gun for NinjaGun {
+impl PlasmaGun {
+    fn pew(&self, cmds: &mut Commands, assets: &Res<MyAssets>) {
+        let settings = PlaybackSettings {
+            mode: bevy::audio::PlaybackMode::Despawn,
+            speed: 1.5,
+            volume: Volume::new(0.3),
+            ..Default::default()
+        };
+        let pew_sound = AudioBundle {
+            source: assets.laser_sound.clone(),
+            settings,
+        };
+        // audio
+
+        cmds.spawn(pew_sound);
+    }
+}
+
+#[derive(Bundle)]
+struct PlasmaBundle<M: Material2d> {
+    model: MaterialMesh2dBundle<M>,
+    collider: Collider,
+    rigidbody: RigidBody,
+    density: ColliderDensity,
+    health: Health,
+    damage: CollisionDamage,
+    velocity: LinearVelocity,
+}
+
+impl FireCtrl for NinjaGun {
     type Missle = NinjaHook;
 
     fn fire(&mut self) -> Option<Self::Missle> {
@@ -86,7 +117,7 @@ impl Gun for NinjaGun {
     }
 }
 
-pub trait Gun {
+pub trait FireCtrl {
     type Missle: Component;
     /// dt time since frame
     fn fire(&mut self) -> Option<Self::Missle>;
@@ -111,7 +142,7 @@ impl PlasmaGun {
     }
 }
 
-impl Gun for PlasmaGun {
+impl FireCtrl for PlasmaGun {
     type Missle = Plasma;
     fn fire(&mut self) -> Option<Plasma> {
         if self.count_down <= 0.0 {
@@ -130,33 +161,59 @@ impl Gun for PlasmaGun {
     }
 }
 
+impl SpawnMissle for PlasmaGun {
+    fn spawn_missle(
+        &self,
+        cmds: &mut Commands,
+        ship_velocity: &LinearVelocity,
+        origin: &Transform,
+        materials: &mut ResMut<Assets<ColorMaterial>>,
+        meshes: &mut ResMut<Assets<Mesh>>,
+        assets: &Res<MyAssets>,
+    ) {
+        let radius = 0.5;
+        let length = 2.;
+        let shape = Capsule2d::new(radius, length);
+        let color = Color::srgb(7.5, 1.0, 7.5);
+        let material = materials.add(color);
+        let model = MaterialMesh2dBundle {
+            mesh: meshes.add(shape).into(),
+            transform: *origin,
+            material,
+            ..default()
+        };
+        let velocity: LinearVelocity =
+            (-origin.up().truncate() * Plasma::SPEED + **ship_velocity).into();
+
+        let missle = PlasmaBundle {
+            model,
+            collider: Collider::capsule(radius, length),
+            rigidbody: RigidBody::Dynamic,
+            density: ColliderDensity(Plasma::DENSITY),
+            health: Health {
+                life: 1,
+                ..default()
+            },
+            damage: CollisionDamage(Plasma::DAMAGE),
+            velocity,
+        };
+        cmds.spawn(missle);
+        self.pew(cmds, assets);
+    }
+}
+
 #[derive(Event)]
-struct GunFire {
-    phantom: PhantomData<PlasmaGun>,
+struct GunFire<G: FireCtrl + SpawnMissle> {
+    phantom: PhantomData<G>,
     entity: Entity,
     origin: Vec2,
 }
 
-impl GunFire {
-    fn new(entity: Entity, origin: Vec2) -> Self {
-        Self {
-            entity,
-            origin,
-            phantom: PhantomData,
-        }
-    }
-}
-
 fn ship_weapon_ctrl(
-    // mut cmds: Commands,
     q: Query<(Entity, &Transform), With<Player>>,
-    mut writer: EventWriter<GunFire>,
+    mut writer: EventWriter<GunFire<PlasmaGun>>,
 
     btn_input: Res<ButtonInput<KeyCode>>,
-    // time: Res<Time>,
-    // assets: Res<MyAssets>,
-    // mut meshes: ResMut<Assets<Mesh>>,
-    // mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     let Ok((entity, ship_transform)) = q.get_single() else {
         return;
@@ -164,7 +221,11 @@ fn ship_weapon_ctrl(
     let transform = ship_transform.translation - ship_transform.up() * FORWARD_OFFSET;
     let origin = transform.truncate();
     if btn_input.pressed(KeyCode::Space) {
-        writer.send(GunFire::new(entity, origin));
+        writer.send(GunFire {
+            entity,
+            origin,
+            phantom: PhantomData,
+        });
     }
     if btn_input.pressed(KeyCode::ControlLeft) {
         let Ok((entity, _)) = q.get_single() else {
@@ -174,22 +235,24 @@ fn ship_weapon_ctrl(
     }
 }
 
-trait MkMissle {
-    type MissleBundle: Bundle;
-    fn into_missle(
-        self,
+trait SpawnMissle {
+    fn spawn_missle(
+        &self,
+        cmds: &mut Commands,
         velocity: &LinearVelocity,
-        origin_transform: &Transform,
+        origin: &Transform,
         materials: &mut ResMut<Assets<ColorMaterial>>,
         meshes: &mut ResMut<Assets<Mesh>>,
         assets: &Res<MyAssets>,
-    ) -> Self::MissleBundle;
+    );
 }
 
-fn handle_plasma_gun_fire(
-    mut reader: EventReader<GunFire>,
+trait Gun = FireCtrl + SpawnMissle + Component;
+
+fn handle_gun_fire<G: Gun>(
+    mut reader: EventReader<GunFire<G>>,
     mut cmds: Commands,
-    mut q: Query<(&mut PlasmaGun, &LinearVelocity, &Transform)>,
+    mut q: Query<(&mut G, &LinearVelocity, &Transform)>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
     assets: Res<MyAssets>,
@@ -310,7 +373,7 @@ fn fire_hook(
     );
     cmds.spawn(missle);
 }
-fn cooldown_guns<T: Gun + Component>(mut q: Query<&mut T>, time: Res<Time>) {
+fn cooldown_guns<T: FireCtrl + Component>(mut q: Query<&mut T>, time: Res<Time>) {
     let dt = time.delta_seconds();
     for mut gun in q.iter_mut() {
         gun.cooldown(dt)
