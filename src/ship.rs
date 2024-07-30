@@ -8,7 +8,7 @@ use bevy::sprite::MaterialMesh2dBundle;
 
 use crate::collide_dmg::CollisionDamage;
 use crate::despawn::Keep;
-use crate::guns::PlasmaGun;
+use crate::guns::{NinjaGun, PlasmaGun};
 use crate::health::Health;
 use crate::schedule::InGameSet;
 use crate::state::GameState;
@@ -133,6 +133,7 @@ fn spawn_spaceship(
         Player,
         SpaceShip,
         PlasmaGun::new(0.07),
+        NinjaGun::default(),
         Keep,
         Health {
             life: SHIP_HEALTH,
