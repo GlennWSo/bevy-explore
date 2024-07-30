@@ -8,18 +8,12 @@ use std::marker::PhantomData;
 
 use avian2d::prelude::*;
 use bevy::prelude::Component;
-use bevy::reflect::Tuple;
 use bevy::sprite::Material2d;
-use bevy::{audio::Volume, prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::collide_dmg::CollisionDamage;
-use crate::ship::SpaceShip;
 use crate::{
-    assets::MyAssets,
-    despawn::despawn_far,
-    health::{DeathCry, Health},
-    schedule::InGameSet,
-    ship::Player,
+    assets::MyAssets, despawn::despawn_far, health::Health, schedule::InGameSet, ship::Player,
 };
 
 const FORWARD_OFFSET: f32 = 7.5;
@@ -124,9 +118,9 @@ fn handle_gun_fire<G: Gun>(
         let Ok(res) = q.get_mut(event.entity) else {
             return;
         };
-        let (mut gun, ship_velocity, ship_transform) = res;
+        let (mut gun, ship_velocity, _) = res;
 
-        let Some(plasma) = gun.fire() else {
+        let Some(_) = gun.fire() else {
             return;
         };
         gun.spawn_missle(
