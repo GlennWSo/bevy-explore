@@ -1,3 +1,6 @@
+mod ninja;
+pub use self::ninja::NinjaGun;
+
 use std::marker::PhantomData;
 
 use avian2d::prelude::*;
@@ -36,27 +39,6 @@ impl Plugin for GunPlugin {
 }
 
 #[derive(Component)]
-pub struct NinjaHook;
-
-impl NinjaHook {
-    const SPEED: f32 = 80.0;
-}
-
-#[derive(Default)]
-enum NinjaState {
-    #[default]
-    Ready,
-    Throwing,
-    Hooked,
-    Cooldown(f32),
-}
-
-#[derive(Component, Default)]
-pub struct NinjaGun {
-    state: NinjaState,
-}
-
-#[derive(Component)]
 pub struct Plasma;
 
 impl Plasma {
@@ -90,75 +72,14 @@ impl PlasmaGun {
 }
 
 #[derive(Bundle)]
-struct MissleBundle<M: Material2d> {
-    model: MaterialMesh2dBundle<M>,
-    collider: Collider,
-    rigidbody: RigidBody,
-    density: ColliderDensity,
-    health: Health,
-    damage: CollisionDamage,
-    velocity: LinearVelocity,
-}
-
-impl FireCtrl for NinjaGun {
-    type Missle = NinjaHook;
-
-    fn fire(&mut self) -> Option<Self::Missle> {
-        let (new_state, res) = match self.state {
-            NinjaState::Ready => (NinjaState::Throwing, Some(NinjaHook)),
-            NinjaState::Throwing => (NinjaState::Throwing, None),
-            NinjaState::Hooked => (NinjaState::Cooldown(0.0), None),
-            NinjaState::Cooldown(ds) => (NinjaState::Cooldown(ds), None),
-        };
-        self.state = new_state;
-        res
-    }
-
-    fn cooldown(&mut self, dt: f32) {
-        todo!()
-    }
-}
-
-impl SpawnMissle for NinjaGun {
-    fn spawn_missle(
-        &self,
-        cmds: &mut Commands,
-        ship_velocity: &LinearVelocity,
-        origin: Transform,
-        materials: &mut ResMut<Assets<ColorMaterial>>,
-        meshes: &mut ResMut<Assets<Mesh>>,
-        assets: &Res<MyAssets>,
-    ) {
-        println!("spawning hook");
-        let radius = 0.5;
-        let length = 2.;
-        let shape = Capsule2d::new(radius, length);
-        let color = Color::srgb(0., 0., 10.0);
-        let material = materials.add(color);
-        let model = MaterialMesh2dBundle {
-            mesh: meshes.add(shape).into(),
-            transform: origin,
-            material,
-            ..default()
-        };
-        let velocity: LinearVelocity =
-            (-origin.up().truncate() * Plasma::SPEED + **ship_velocity).into();
-
-        let missle = MissleBundle {
-            model,
-            collider: Collider::capsule(radius, length),
-            rigidbody: RigidBody::Dynamic,
-            density: ColliderDensity(Plasma::DENSITY),
-            health: Health {
-                life: 1,
-                ..default()
-            },
-            damage: CollisionDamage(Plasma::DAMAGE),
-            velocity,
-        };
-        cmds.spawn(missle);
-        // self.pew(cmds, assets);
-    }
+pub struct MissleBundle<M: Material2d> {
+    pub model: MaterialMesh2dBundle<M>,
+    pub collider: Collider,
+    pub rigidbody: RigidBody,
+    pub density: ColliderDensity,
+    pub health: Health,
+    pub damage: CollisionDamage,
+    pub velocity: LinearVelocity,
 }
 
 pub trait FireCtrl {
