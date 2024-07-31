@@ -1,9 +1,22 @@
 use crate::{collide_dmg::CollisionDamage, health::Health};
 
-use super::{FireCtrl, MissleBundle, MyAssets, SpawnMissle};
+use super::{handle_gun_fire, FireCtrl, GunFireEvent, MyAssets, SpawnMissle};
 
 use avian2d::prelude::*;
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{
+    prelude::*,
+    sprite::{Material2d, MaterialMesh2dBundle},
+};
+
+pub struct NinjaPlugin;
+
+impl Plugin for NinjaPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, handle_gun_fire::<NinjaGun>);
+        app.add_event::<GunFireEvent<NinjaGun>>();
+        app.add_systems(Update, stick_on_collide);
+    }
+}
 
 #[derive(Component)]
 pub struct NinjaHook;
@@ -26,6 +39,26 @@ enum NinjaState {
 pub struct NinjaGun {
     state: NinjaState,
 }
+
+#[derive(Component)]
+struct Glue;
+
+fn stick_on_collide(
+    mut cmds: Commands,
+    // mut collision_event_reader: EventReader<CollisionStarted>,
+    q: Query<(Entity, &CollidingEntities), (With<NinjaHook>, Without<Glue>)>,
+) {
+    let Ok((entity, collisions)) = q.get_single() else {
+        return;
+    };
+    let Some(&other_entity) = collisions.iter().next() else {
+        return;
+    };
+    cmds.entity(entity).insert(Glue);
+    let constraint = FixedJoint::new(entity, other_entity);
+    cmds.spawn(constraint);
+}
+
 impl FireCtrl for NinjaGun {
     type Missle = NinjaHook;
 
@@ -43,6 +76,16 @@ impl FireCtrl for NinjaGun {
     fn cooldown(&mut self, dt: f32) {
         todo!()
     }
+}
+#[derive(Bundle)]
+pub struct MissleBundle<M: Material2d> {
+    pub ninjahook: NinjaHook,
+    pub model: MaterialMesh2dBundle<M>,
+    pub collider: Collider,
+    pub rigidbody: RigidBody,
+    pub density: ColliderDensity,
+    pub health: Health,
+    pub velocity: LinearVelocity,
 }
 impl SpawnMissle for NinjaGun {
     fn spawn_missle(
@@ -75,11 +118,11 @@ impl SpawnMissle for NinjaGun {
             rigidbody: RigidBody::Dynamic,
             density: ColliderDensity(NinjaHook::DENSITY),
             health: Health {
-                life: 1,
+                life: 100,
                 ..default()
             },
-            damage: CollisionDamage(0),
             velocity,
+            ninjahook: NinjaHook,
         };
         cmds.spawn(missle);
         // self.pew(cmds, assets);

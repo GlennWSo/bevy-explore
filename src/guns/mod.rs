@@ -1,6 +1,7 @@
 mod ninja;
 mod plasma;
 pub use self::ninja::NinjaGun;
+use self::ninja::NinjaPlugin;
 use self::plasma::Plasma;
 pub use self::plasma::PlasmaGun;
 
@@ -27,11 +28,10 @@ impl Plugin for GunPlugin {
             cooldown_guns::<PlasmaGun>.in_set(InGameSet::EntityUpdate),
         )
         .add_systems(Update, handle_gun_fire::<PlasmaGun>)
-        .add_systems(Update, handle_gun_fire::<NinjaGun>)
         .add_systems(Update, ship_weapon_ctrl.in_set(InGameSet::UI))
         .add_systems(Update, despawn_far::<Plasma, 10_000>);
         app.add_event::<GunFireEvent<PlasmaGun>>();
-        app.add_event::<GunFireEvent<NinjaGun>>();
+        app.add_plugins(NinjaPlugin);
     }
 }
 
