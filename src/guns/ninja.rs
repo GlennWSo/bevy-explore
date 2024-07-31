@@ -1,4 +1,4 @@
-use crate::{collide_dmg::CollisionDamage, health::Health};
+use crate::{collide_dmg::CollisionDamage, health::Health, ship::Player};
 
 use super::{handle_gun_fire, FireCtrl, GunFireEvent, MyAssets, SpawnMissle};
 
@@ -46,17 +46,27 @@ struct Glue;
 fn stick_on_collide(
     mut cmds: Commands,
     // mut collision_event_reader: EventReader<CollisionStarted>,
-    q: Query<(Entity, &CollidingEntities), (With<NinjaHook>, Without<Glue>)>,
+    q: Query<(Entity, &CollidingEntities, &Transform), (With<NinjaHook>, Without<Glue>)>,
+    player_q: Query<(Entity, &Transform), With<Player>>,
 ) {
-    let Ok((entity, collisions)) = q.get_single() else {
+    let Ok((entity, collisions, transform)) = q.get_single() else {
         return;
     };
     let Some(&other_entity) = collisions.iter().next() else {
         return;
     };
-    cmds.entity(entity).insert(Glue);
-    let constraint = FixedJoint::new(entity, other_entity);
-    cmds.spawn(constraint);
+    let glue_joint = FixedJoint::new(entity, other_entity);
+    let glue_joint = cmds.spawn(glue_joint).id();
+    cmds.entity(entity)
+        .insert(Glue)
+        .push_children(&[glue_joint]);
+
+    let Ok(player) = player_q.get_single() else {
+        return;
+    };
+    let distance = player.1.translation.distance(transform.translation) + 30.0;
+    let joint = DistanceJoint::new(player.0, entity).with_limits(0.0, distance);
+    cmds.spawn(joint);
 }
 
 impl FireCtrl for NinjaGun {
