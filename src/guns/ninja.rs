@@ -17,10 +17,13 @@ impl Plugin for NinjaPlugin {
         app.add_systems(Update, handle_hook_fire);
         app.add_event::<GunFireEvent<NinjaGun>>();
         app.add_event::<ReleaseHookEvent>();
-        app.add_systems(Update, stick_on_collide);
+        app.add_systems(Update, stick_on_collide.in_set(InGameSet::Spawn));
         app.add_systems(Update, ui_release_hook.in_set(InGameSet::UI));
-        app.add_systems(Update, handle_hook_release.in_set(InGameSet::EntityUpdate));
-        app.add_systems(Update, glue_break);
+        app.add_systems(Update, handle_hook_release.in_set(InGameSet::Despawn));
+        app.add_systems(
+            Update,
+            (glue_break, remove_long_hook).in_set(InGameSet::EntityUpdate),
+        );
     }
 }
 
@@ -95,26 +98,46 @@ fn stick_on_collide(
     q: Query<(Entity, &CollidingEntities, &Transform), (With<NinjaHook>, Without<Glue>)>,
     player_q: Query<(Entity, &Transform), With<Player>>,
 ) {
-    let Ok((entity, collisions, transform)) = q.get_single() else {
+    let Ok((hook_id, collisions, transform)) = q.get_single() else {
         return;
     };
     let Some(&other_entity) = collisions.iter().next() else {
         return;
     };
-    let glue_joint = FixedJoint::new(entity, other_entity);
+    let glue_joint = FixedJoint::new(hook_id, other_entity);
     let glue_joint = cmds.spawn(glue_joint).id();
-    cmds.entity(entity)
+    cmds.entity(hook_id)
         .insert(Glue { on: other_entity })
         .push_children(&[glue_joint]);
 
     let Ok(player) = player_q.get_single() else {
         return;
     };
-    let distance = player.1.translation.distance(transform.translation) + 30.0;
-    let joint = DistanceJoint::new(player.0, entity)
+    let distance = player.1.translation.distance(transform.translation) + 20.0;
+    let joint = DistanceJoint::new(player.0, hook_id)
         .with_limits(0.0, distance)
         .with_compliance(1e-2);
     cmds.spawn(joint);
+}
+
+fn remove_long_hook(
+    hook_q: Query<(&FromGun, &Transform), (With<NinjaHook>, Without<Glue>)>,
+    gun_q: Query<&Transform, With<NinjaGun>>,
+    mut writer: EventWriter<ReleaseHookEvent>,
+) {
+    let max_dist = 130.0;
+    for (gun_id, hook_transform) in hook_q.iter() {
+        let Ok(gun_transform) = gun_q.get(**gun_id) else {
+            continue;
+        };
+        let distance = hook_transform
+            .translation
+            .distance(gun_transform.translation);
+        if distance > max_dist {
+            println!("hook out of bounds");
+            writer.send(ReleaseHookEvent { gun: **gun_id });
+        }
+    }
 }
 
 // maybe it is better to observe on Joints being removed?
