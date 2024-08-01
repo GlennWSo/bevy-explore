@@ -200,11 +200,13 @@ fn handle_hook_fire(
         let Some(_) = gun.fire() else {
             return;
         };
+        let mut origin = event.origin;
+        origin.translation.z = 10.0;
         gun.spawn_missle(
             gun_id,
             &mut cmds,
             ship_velocity,
-            event.origin,
+            origin,
             &mut materials,
             &mut meshes,
         );
