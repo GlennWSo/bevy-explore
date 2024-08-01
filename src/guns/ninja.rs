@@ -108,7 +108,9 @@ fn stick_on_collide(
         return;
     };
     let distance = player.1.translation.distance(transform.translation) + 30.0;
-    let joint = DistanceJoint::new(player.0, entity).with_limits(0.0, distance);
+    let joint = DistanceJoint::new(player.0, entity)
+        .with_limits(0.0, distance)
+        .with_compliance(1e-2);
     cmds.spawn(joint);
 }
 
