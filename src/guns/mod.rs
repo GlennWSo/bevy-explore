@@ -54,7 +54,7 @@ pub trait FireCtrl {
 }
 
 #[derive(Event)]
-struct GunFireEvent<G: FireCtrl + SpawnMissle> {
+struct GunFireEvent<G: FireCtrl> {
     phantom: PhantomData<G>,
     entity: Entity,
     origin: Transform,
@@ -101,7 +101,7 @@ trait SpawnMissle {
         materials: &mut ResMut<Assets<ColorMaterial>>,
         meshes: &mut ResMut<Assets<Mesh>>,
         assets: &Res<MyAssets>,
-    );
+    ) -> Entity;
 }
 
 trait Gun = FireCtrl + SpawnMissle + Component;

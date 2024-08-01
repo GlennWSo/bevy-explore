@@ -83,7 +83,7 @@ impl SpawnMissle for PlasmaGun {
         materials: &mut ResMut<Assets<ColorMaterial>>,
         meshes: &mut ResMut<Assets<Mesh>>,
         assets: &Res<MyAssets>,
-    ) {
+    ) -> Entity {
         let radius = 0.5;
         let length = 2.;
         let shape = Capsule2d::new(radius, length);
@@ -110,7 +110,7 @@ impl SpawnMissle for PlasmaGun {
             damage: CollisionDamage(Plasma::DAMAGE),
             velocity,
         };
-        cmds.spawn(missle);
         self.pew(cmds, assets);
+        cmds.spawn(missle).id()
     }
 }
