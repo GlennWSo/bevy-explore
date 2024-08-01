@@ -20,6 +20,7 @@ impl Plugin for NinjaPlugin {
         app.add_systems(Update, stick_on_collide);
         app.add_systems(Update, ui_release_hook.in_set(InGameSet::UI));
         app.add_systems(Update, handle_hook_release.in_set(InGameSet::EntityUpdate));
+        app.add_systems(Update, glue_break);
     }
 }
 
@@ -47,7 +48,9 @@ pub struct NinjaGun {
 }
 
 #[derive(Component)]
-struct Glue;
+struct Glue {
+    on: Entity,
+}
 
 #[derive(Event)]
 struct ReleaseHookEvent {
@@ -101,7 +104,7 @@ fn stick_on_collide(
     let glue_joint = FixedJoint::new(entity, other_entity);
     let glue_joint = cmds.spawn(glue_joint).id();
     cmds.entity(entity)
-        .insert(Glue)
+        .insert(Glue { on: other_entity })
         .push_children(&[glue_joint]);
 
     let Ok(player) = player_q.get_single() else {
@@ -112,6 +115,19 @@ fn stick_on_collide(
         .with_limits(0.0, distance)
         .with_compliance(1e-2);
     cmds.spawn(joint);
+}
+
+fn glue_break(
+    q: Query<(Entity, &Glue, &FromGun)>,
+    q_glued2: Query<()>,
+    mut writer: EventWriter<ReleaseHookEvent>,
+) {
+    for (hook_id, glue, gun) in q.iter() {
+        if let Ok(_other) = q_glued2.get(glue.on) {
+            continue;
+        }
+        writer.send(ReleaseHookEvent { gun: **gun });
+    }
 }
 
 impl FireCtrl for NinjaGun {
