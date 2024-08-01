@@ -117,12 +117,13 @@ fn stick_on_collide(
     cmds.spawn(joint);
 }
 
+// maybe it is better to observe on Joints being removed?
 fn glue_break(
-    q: Query<(Entity, &Glue, &FromGun)>,
+    q: Query<(&Glue, &FromGun)>,
     q_glued2: Query<()>,
     mut writer: EventWriter<ReleaseHookEvent>,
 ) {
-    for (hook_id, glue, gun) in q.iter() {
+    for (glue, gun) in q.iter() {
         if let Ok(_other) = q_glued2.get(glue.on) {
             continue;
         }
