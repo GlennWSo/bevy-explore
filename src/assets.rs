@@ -1,4 +1,6 @@
 use bevy::{math::primitives::Circle, prelude::*};
+
+use crate::schedule::InitStages;
 // use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 
 #[derive(Resource, Default)]
@@ -14,6 +16,12 @@ pub struct MyAssets {
 }
 
 pub struct AssetPlug;
+impl Plugin for AssetPlug {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<MyAssets>()
+            .add_systems(Startup, setup.in_set(InitStages::LoadAssets));
+    }
+}
 
 fn setup(
     mut assets: ResMut<MyAssets>,
@@ -37,11 +45,5 @@ fn setup(
         ball: astroid_mesh,
         asteroid_material: laser_color_handle,
         crack: asset_server.load("524610__clearwavsound__fruit-crack.wav"),
-    }
-}
-
-impl Plugin for AssetPlug {
-    fn build(&self, app: &mut App) {
-        app.init_resource::<MyAssets>().add_systems(Startup, setup);
     }
 }

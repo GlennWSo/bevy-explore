@@ -11,10 +11,17 @@ pub enum InGameSet {
     Despawn,
 }
 
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub enum InitStages {
+    LoadAssets,
+    Spawn,
+}
+
 pub struct SchedulePlugin;
 
 impl Plugin for SchedulePlugin {
     fn build(&self, app: &mut App) {
+        app.configure_sets(Startup, (InitStages::LoadAssets, InitStages::Spawn).chain());
         app.configure_sets(
             Update,
             (

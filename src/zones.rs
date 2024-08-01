@@ -1,3 +1,4 @@
+use crate::schedule::InitStages;
 use crate::ship::Player;
 use crate::ship::SpaceShip;
 use crate::stage::IntoMovingBundle;
@@ -21,7 +22,7 @@ impl Plugin for ZonePlugin {
             .register_type::<ZoneState>()
             .register_type::<Population>()
             .add_event::<DespawnEvent>()
-            .add_systems(Startup, init_zone)
+            .add_systems(Startup, init_zone.in_set(InitStages::Spawn))
             .add_systems(
                 Update,
                 (despawn_oob_zones, despawn_zone)
