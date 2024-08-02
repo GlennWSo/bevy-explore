@@ -6,6 +6,7 @@ use super::{handle_gun_fire, FireCtrl, GunFireEvent, MyAssets, SpawnMissle};
 
 use avian2d::prelude::*;
 use bevy::{
+    audio,
     prelude::{Entity, *},
     sprite::{Material2d, MaterialMesh2dBundle},
 };
@@ -195,7 +196,7 @@ impl NinjaGun {
         origin: Transform,
         materials: &mut ResMut<Assets<ColorMaterial>>,
         meshes: &mut ResMut<Assets<Mesh>>,
-        // _assets: &Res<MyAssets>,
+        assets: &Res<MyAssets>,
     ) {
         println!("spawning hook");
         let radius = 0.5;
@@ -223,7 +224,23 @@ impl NinjaGun {
         };
         let missle_id = cmds.spawn(missle).id();
         self.hook = Some(missle_id);
-        // self.pew(cmds, assets);
+        self.pew(cmds, assets);
+    }
+
+    fn pew(&self, cmds: &mut Commands, assets: &Res<MyAssets>) {
+        let settings = PlaybackSettings {
+            mode: bevy::audio::PlaybackMode::Despawn,
+            speed: 1.5,
+            volume: audio::Volume::new(0.3),
+            ..Default::default()
+        };
+        let pew_sound = AudioBundle {
+            source: assets.doing.clone(),
+            settings,
+        };
+        // audio
+
+        cmds.spawn(pew_sound);
     }
 }
 fn handle_hook_fire(
@@ -232,6 +249,7 @@ fn handle_hook_fire(
     mut q: Query<(Entity, &mut NinjaGun, &LinearVelocity, &Transform)>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
+    assets: Res<MyAssets>,
 ) {
     reader.read().for_each(|event| {
         let Ok(res) = q.get_mut(event.entity) else {
@@ -251,6 +269,7 @@ fn handle_hook_fire(
             origin,
             &mut materials,
             &mut meshes,
+            &assets,
         );
         // cmds.entity(event.entity).push_children(&[missle_id]);
     });
