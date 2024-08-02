@@ -2,8 +2,8 @@ mod ninja;
 mod plasma;
 pub use self::ninja::NinjaGun;
 use self::ninja::NinjaPlugin;
-use self::plasma::Plasma;
-pub use self::plasma::PlasmaGun;
+// use self::plasma::Plasma;
+pub use self::plasma::{Plasma, PlasmaGun};
 
 use std::marker::PhantomData;
 
@@ -17,7 +17,7 @@ use crate::{
     assets::MyAssets, despawn::despawn_far, health::Health, schedule::InGameSet, ship::Player,
 };
 
-const FORWARD_OFFSET: f32 = 7.5;
+const FORWARD_OFFSET: f32 = 8.5;
 
 pub struct GunPlugin;
 

@@ -14,6 +14,8 @@ pub struct MyAssets {
     pub ball: Handle<Mesh>,
     pub asteroid_material: Handle<ColorMaterial>,
     pub doing: Handle<AudioSource>,
+    pub slap: Handle<AudioSource>,
+    pub muffled_laser: Handle<AudioSource>,
 }
 
 pub struct AssetPlug;
@@ -47,5 +49,7 @@ fn setup(
         asteroid_material: laser_color_handle,
         crack: asset_server.load("524610__clearwavsound__fruit-crack.wav"),
         doing: asset_server.load("funny_boing_1_miksmusic.wav"),
+        slap: asset_server.load("glass_slapp1_cjspellsfish.wav"),
+        muffled_laser: asset_server.load("muffled_laser_blast_samsterbirdies.mp3"),
     }
 }

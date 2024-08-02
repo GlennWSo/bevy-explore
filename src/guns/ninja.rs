@@ -34,6 +34,20 @@ pub struct NinjaHook;
 impl NinjaHook {
     const SPEED: f32 = 120.0;
     const DENSITY: f32 = 5.0;
+    fn impact_sound(cmds: &mut Commands, assets: &Res<MyAssets>) {
+        let settings = PlaybackSettings {
+            mode: bevy::audio::PlaybackMode::Despawn,
+            speed: 1.5,
+            volume: audio::Volume::new(0.5),
+            ..Default::default()
+        };
+        let slap = AudioBundle {
+            source: assets.doing.clone(),
+            settings,
+        };
+
+        cmds.spawn(slap);
+    }
 }
 
 #[derive(Default)]
@@ -98,6 +112,7 @@ fn stick_on_collide(
     // mut collision_event_reader: EventReader<CollisionStarted>,
     q: Query<(Entity, &CollidingEntities, &Transform), (With<NinjaHook>, Without<Glue>)>,
     player_q: Query<(Entity, &Transform), With<Player>>,
+    assets: Res<MyAssets>,
 ) {
     let Ok((hook_id, collisions, transform)) = q.get_single() else {
         return;
@@ -119,6 +134,7 @@ fn stick_on_collide(
         .with_limits(0.0, distance)
         .with_compliance(1e-2);
     cmds.spawn(joint);
+    NinjaHook::impact_sound(&mut cmds, &assets);
 }
 
 fn remove_long_hook(
@@ -235,7 +251,7 @@ impl NinjaGun {
             ..Default::default()
         };
         let pew_sound = AudioBundle {
-            source: assets.doing.clone(),
+            source: assets.muffled_laser.clone(),
             settings,
         };
         // audio
