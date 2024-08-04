@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 // use bevy::input::InputSystem
 
+use crate::assets::MyAssets;
 use crate::collide_dmg::CollisionDamage;
 use crate::despawn::Keep;
 use crate::guns::{NinjaGun, PlasmaGun};
@@ -99,6 +100,7 @@ fn spawn_spaceship(
     mut cmds: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    assets: Res<MyAssets>,
 ) {
     // transform.rotate_local_x(90.0f32.to_radians());
     // transform.rotate_x(90.0f32.to_radians());
@@ -111,10 +113,20 @@ fn spawn_spaceship(
     let mut transform = Transform::from_xyz(0., 10., 0.).with_scale(scale);
     transform.rotate_z(PI);
     let color: Color = css::BLUE.into();
-    let model2d = MaterialMesh2dBundle {
-        mesh: meshes.add(shape).into(),
+    // let model2d = MaterialMesh2dBundle {
+    //     mesh: meshes.add(shape).into(),
+    //     transform,
+    //     material: materials.add(color),
+    //     ..default()
+    // };
+    let model2d = SpriteBundle {
         transform,
-        material: materials.add(color),
+        texture: assets.ship.clone(),
+        sprite: Sprite {
+            flip_y: true,
+            custom_size: Some(Vec2 { x: 3., y: 3. }),
+            ..default()
+        },
         ..default()
     };
 

@@ -6,7 +6,7 @@ use crate::schedule::InitStages;
 #[derive(Resource, Default)]
 pub struct MyAssets {
     pub astriod: Handle<Image>,
-    pub ship: Handle<Scene>,
+    pub ship: Handle<Image>,
     pub missles: Handle<Scene>,
     pub pop: Handle<AudioSource>,
     pub laser_sound: Handle<AudioSource>,
@@ -41,7 +41,7 @@ fn setup(
     *assets = MyAssets {
         astriod: asset_server.load("baren.png"),
         // astriod: asset_server.load("Planet.glb#Scene0"),
-        ship: asset_server.load("Spaceship.glb#Scene0"),
+        ship: asset_server.load("scout.png"),
         missles: asset_server.load("BulletsPickup.glb#Scene0"),
         pop: asset_server.load("ball_tap2073.wav"),
         laser_sound: asset_server.load("laser-104024.mp3"),
