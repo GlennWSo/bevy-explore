@@ -112,13 +112,6 @@ fn spawn_spaceship(
     scale *= 5.0;
     let mut transform = Transform::from_xyz(0., 10., 0.).with_scale(scale);
     transform.rotate_z(PI);
-    let color: Color = css::BLUE.into();
-    // let model2d = MaterialMesh2dBundle {
-    //     mesh: meshes.add(shape).into(),
-    //     transform,
-    //     material: materials.add(color),
-    //     ..default()
-    // };
     let model2d = SpriteBundle {
         transform,
         texture: assets.ship.clone(),
