@@ -1,3 +1,4 @@
+use crate::astroids::Rock;
 use crate::schedule::InitStages;
 use crate::ship::Player;
 use crate::ship::SpaceShip;
@@ -82,9 +83,14 @@ impl From<Zone> for Population {
         let mut rng: Pcg64 = Seeder::from(zone).make_rng();
         let n: u8 = rng.gen_range(10..100);
         let size_dist = rand_distr::Binomial::new(15, 0.1).unwrap();
+        let kind_dist = rand_distr::Standard;
+        let mut kind_gen = rng.clone().sample_iter(kind_dist);
         let astriods = rng.sample_iter(size_dist).map(|rand| {
             let bulk = ((rand + 1).pow(2)) as u8;
-            Astroid { bulk }
+            Astroid {
+                bulk,
+                kind: kind_gen.next().unwrap(),
+            }
         });
         let mut map: HashMap<Seed, _> = HashMap::new();
         for astriod in astriods.take(n as usize) {

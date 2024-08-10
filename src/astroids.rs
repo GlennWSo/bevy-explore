@@ -2,6 +2,8 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use rand::Rng;
+use rand_distr::Distribution;
+use rand_distr::Standard;
 
 use crate::assets::MyAssets;
 use crate::collide_dmg::CollisionDamage;
@@ -28,9 +30,30 @@ impl Plugin for AstriodPlug {
     }
 }
 
+#[derive(Component, Default, Debug, Copy, Clone, Reflect, PartialEq, Eq, Hash)]
+pub enum Rock {
+    #[default]
+    Stone,
+    Ice,
+    Metal,
+}
+
+impl Distribution<Rock> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Rock {
+        // let stone_prob = 800;
+        const ICE_PROB: i32 = 200;
+
+        match rng.gen_range(0..1000) {
+            0..ICE_PROB => Rock::Ice,
+            _ => Rock::Stone,
+        }
+    }
+}
+
 #[derive(Component, Debug, PartialEq, Eq, Hash, Clone, Copy, Reflect)]
 pub struct Astroid {
     pub bulk: u8,
+    pub kind: Rock,
 }
 
 impl Astroid {
@@ -111,6 +134,7 @@ fn split_dead(
         let velicities = explode_veclocity(*velocity, 2);
         let shard = Astroid {
             bulk: astriod.bulk / 2,
+            kind: astriod.kind,
         };
         let particles = velicities.into_iter().map(|v| {
             let origin = transform.translation.truncate();
@@ -173,9 +197,17 @@ impl Stage for Astroid {
     ) -> impl Bundle {
         let transform = transform.with_scale(self.scale());
         // let mesh = Mesh2dHandle(assets.ball.clone());
+
+        // let texture = assets.astriod.clone();
+        println!("{:?}", self.kind);
+        let texture = match self.kind {
+            Rock::Stone => assets.astriod.clone(),
+            Rock::Ice => assets.astriod2.clone(),
+            Rock::Metal => todo!(),
+        };
         let model2d = SpriteBundle {
             transform,
-            texture: assets.astriod.clone(),
+            texture,
             sprite: Sprite {
                 custom_size: Some(Vec2 { x: 2., y: 2. }),
                 ..default()
