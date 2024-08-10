@@ -41,10 +41,13 @@ pub enum Rock {
 impl Distribution<Rock> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Rock {
         // let stone_prob = 800;
-        const ICE_PROB: i32 = 200;
+        const ICE_PROB: u32 = 300;
+        const METAL_PROB: u32 = 100;
+        const METAL_HB: u32 = METAL_PROB + ICE_PROB;
 
         match rng.gen_range(0..1000) {
             0..ICE_PROB => Rock::Ice,
+            ICE_PROB..METAL_HB => Rock::Metal,
             _ => Rock::Stone,
         }
     }
@@ -203,7 +206,7 @@ impl Stage for Astroid {
         let texture = match self.kind {
             Rock::Stone => assets.astriod.clone(),
             Rock::Ice => assets.astriod2.clone(),
-            Rock::Metal => todo!(),
+            Rock::Metal => assets.astriod_metal.clone(),
         };
         let model2d = SpriteBundle {
             transform,
