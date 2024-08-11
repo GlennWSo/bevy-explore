@@ -5,19 +5,19 @@ use crate::schedule::InitStages;
 
 #[derive(Resource, Default)]
 pub struct MyAssets {
-    pub astriod: Handle<Image>,
-    pub astriod2: Handle<Image>,
-    pub astriod_metal: Handle<Image>,
-    pub ship: Handle<Image>,
-    pub missles: Handle<Scene>,
-    pub pop: Handle<AudioSource>,
-    pub laser_sound: Handle<AudioSource>,
-    pub crack: Handle<AudioSource>,
-    pub ball: Handle<Mesh>,
     pub asteroid_material: Handle<ColorMaterial>,
+    pub astriod2: Handle<Image>,
+    pub astriod: Handle<Image>,
+    pub astriod_metal: Handle<Image>,
+    pub ball: Handle<Mesh>,
+    pub crack: Handle<AudioSource>,
     pub doing: Handle<AudioSource>,
-    pub slap: Handle<AudioSource>,
+    pub laser_sound: Handle<AudioSource>,
+    pub missles: Handle<Scene>,
     pub muffled_laser: Handle<AudioSource>,
+    pub pop: Handle<AudioSource>,
+    pub ship: Handle<Image>,
+    pub slap: Handle<AudioSource>,
 }
 
 pub struct AssetPlug;
