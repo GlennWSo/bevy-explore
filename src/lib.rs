@@ -9,6 +9,7 @@ pub mod despawn;
 pub mod guns;
 pub mod health;
 pub mod schedule;
+pub mod sentry;
 pub mod ship;
 pub mod stage;
 pub mod state;

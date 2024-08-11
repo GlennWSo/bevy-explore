@@ -18,6 +18,7 @@ pub struct MyAssets {
     pub pop: Handle<AudioSource>,
     pub ship: Handle<Image>,
     pub slap: Handle<AudioSource>,
+    pub turret: Handle<Image>,
 }
 
 pub struct AssetPlug;
@@ -41,19 +42,20 @@ fn setup(
     let laser_color_handle = colors.add(laser_color);
 
     *assets = MyAssets {
-        astriod: asset_server.load("baren.png"),
-        astriod2: asset_server.load("ice_planet.png"),
-        astriod_metal: asset_server.load("lava_planet.png"),
-        // astriod: asset_server.load("Planet.glb#Scene0"),
-        ship: asset_server.load("scout.png"),
-        missles: asset_server.load("BulletsPickup.glb#Scene0"),
-        pop: asset_server.load("ball_tap2073.wav"),
-        laser_sound: asset_server.load("laser-104024.mp3"),
-        ball: astroid_mesh,
         asteroid_material: laser_color_handle,
+        astriod2: asset_server.load("ice_planet.png"),
+        astriod: asset_server.load("baren.png"),
+        // astriod: asset_server.load("Planet.glb#Scene0"),
+        astriod_metal: asset_server.load("lava_planet.png"),
+        ball: astroid_mesh,
         crack: asset_server.load("524610__clearwavsound__fruit-crack.wav"),
         doing: asset_server.load("funny_boing_1_miksmusic.wav"),
-        slap: asset_server.load("glass_slapp1_cjspellsfish.wav"),
+        laser_sound: asset_server.load("laser-104024.mp3"),
+        missles: asset_server.load("BulletsPickup.glb#Scene0"),
         muffled_laser: asset_server.load("muffled_laser_blast_samsterbirdies.mp3"),
+        pop: asset_server.load("ball_tap2073.wav"),
+        ship: asset_server.load("scout.png"),
+        slap: asset_server.load("glass_slapp1_cjspellsfish.wav"),
+        turret: asset_server.load("techno_turret2.png"),
     }
 }

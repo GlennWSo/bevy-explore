@@ -15,11 +15,14 @@ impl Plugin for CollideDamagePlugin {
 #[derive(Component, Deref, DerefMut)]
 pub struct CollisionDamage(pub i32);
 
-fn contact_damage<HealthFilter: QueryFilter, DmgFilter: QueryFilter>(
-    mut collision_event_reader: EventReader<CollisionStarted>,
-    mut health_q: Query<&mut Health, HealthFilter>,
+fn contact_damage<DmgFilter, HealthFilter>(
+    collision_event_reader: EventReader<CollisionStarted>,
+    health_q: Query<&mut Health, HealthFilter>,
     damage_q: Query<&CollisionDamage, DmgFilter>,
-) {
+) where
+    DmgFilter: QueryFilter,
+    HealthFilter: QueryFilter,
+{
     {
         let mut collision_event_reader = collision_event_reader;
         let mut health_q = health_q;

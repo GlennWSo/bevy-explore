@@ -111,6 +111,6 @@ impl SpawnMissle for PlasmaGun {
             velocity,
         };
         self.pew(cmds, assets);
-        cmds.spawn(missle).id()
+        cmds.spawn((Plasma, missle)).id()
     }
 }
