@@ -1,7 +1,13 @@
 use avian2d::prelude::*;
 use bevy::prelude::*;
 
-use crate::{assets::MyAssets, schedule::InitStages, stage::Stage};
+use crate::{
+    assets::MyAssets,
+    collide_dmg::CollisionDamage,
+    health::{DeathCry, Health},
+    schedule::InitStages,
+    stage::Stage,
+};
 
 pub struct SentryPlugin;
 
@@ -31,6 +37,16 @@ impl Stage for Sentry {
             },
             ..default()
         };
-        (model2d, RigidBody::Dynamic, Collider::circle(2.5))
+        (
+            model2d,
+            RigidBody::Dynamic,
+            ColliderDensity(6.),
+            Collider::circle(2.5),
+            CollisionDamage(1),
+            Health {
+                life: 50,
+                death_cry: DeathCry::Pop,
+            },
+        )
     }
 }
