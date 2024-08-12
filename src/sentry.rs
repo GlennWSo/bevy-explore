@@ -2,10 +2,7 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
-    assets::MyAssets,
-    collide_dmg::CollisionDamage,
-    health::{DeathCry, Health},
-    schedule::InitStages,
+    assets::MyAssets, collide_dmg::CollisionDamage, health::Health, schedule::InitStages,
     stage::Stage,
 };
 
@@ -45,7 +42,7 @@ impl Stage for Sentry {
             CollisionDamage(1),
             Health {
                 life: 50,
-                death_cry: DeathCry::Pop,
+                // death_cry: DeathCry::Pop,
             },
         )
     }

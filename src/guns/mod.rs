@@ -13,6 +13,7 @@ use bevy::sprite::Material2d;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::collide_dmg::CollisionDamage;
+use crate::health::cry_dead;
 use crate::{
     assets::MyAssets, despawn::despawn_far, health::Health, schedule::InGameSet, ship::Player,
 };
@@ -29,6 +30,7 @@ impl Plugin for GunPlugin {
         )
         .add_systems(Update, handle_gun_fire::<PlasmaGun>)
         .add_systems(Update, ship_weapon_ctrl.in_set(InGameSet::UI))
+        .add_systems(Update, cry_dead::<Plasma>.in_set(InGameSet::Spawn))
         .add_systems(Update, despawn_far::<Plasma, 10_000>);
         app.add_event::<GunFireEvent<PlasmaGun>>();
         app.add_plugins(NinjaPlugin);

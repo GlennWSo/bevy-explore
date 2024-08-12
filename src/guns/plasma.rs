@@ -1,4 +1,8 @@
-use crate::{collide_dmg::CollisionDamage, health::Health, layers::GameLayer};
+use crate::{
+    collide_dmg::CollisionDamage,
+    health::{DeathCry, Health},
+    layers::GameLayer,
+};
 
 use super::{FireCtrl, MissleBundle, MyAssets, SpawnMissle};
 
@@ -12,6 +16,15 @@ impl Plasma {
     const SPEED: f32 = 80.0;
     const DAMAGE: i32 = 10;
     const DENSITY: f32 = 5.0;
+}
+
+impl DeathCry for Plasma {
+    fn cry(&self, assets: &MyAssets) -> AudioBundle {
+        AudioBundle {
+            source: assets.pop.clone(),
+            settings: PlaybackSettings::DESPAWN,
+        }
+    }
 }
 
 #[derive(Component)]
