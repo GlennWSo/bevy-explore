@@ -1,4 +1,4 @@
-use crate::{collide_dmg::CollisionDamage, health::Health};
+use crate::{collide_dmg::CollisionDamage, health::Health, layers::GameLayer};
 
 use super::{FireCtrl, MissleBundle, MyAssets, SpawnMissle};
 
@@ -110,7 +110,10 @@ impl SpawnMissle for PlasmaGun {
             damage: CollisionDamage(Plasma::DAMAGE),
             velocity,
         };
+        let layer = CollisionLayers::new(GameLayer::Plasma, [GameLayer::Other]);
+
+        let id = cmds.spawn((Plasma, missle, layer)).id();
         self.pew(cmds, assets);
-        cmds.spawn((Plasma, missle)).id()
+        id
     }
 }

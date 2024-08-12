@@ -8,6 +8,7 @@ pub mod collide_dmg;
 pub mod despawn;
 pub mod guns;
 pub mod health;
+pub mod layers;
 pub mod schedule;
 pub mod sentry;
 pub mod ship;

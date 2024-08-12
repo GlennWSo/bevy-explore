@@ -7,8 +7,9 @@ pub struct CollideDamagePlugin;
 
 impl Plugin for CollideDamagePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, contact_damage::<With<Plasma>, Without<Plasma>>);
-        app.add_systems(Update, contact_damage::<Without<Plasma>, ()>);
+        app.add_systems(Update, contact_damage::<(), ()>);
+        // app.add_systems(Update, contact_damage::<With<Plasma>, Without<Plasma>>);
+        // app.add_systems(Update, contact_damage::<Without<Plasma>, ()>);
     }
 }
 
