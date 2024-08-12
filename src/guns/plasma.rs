@@ -110,7 +110,12 @@ impl SpawnMissle for PlasmaGun {
             damage: CollisionDamage(Plasma::DAMAGE),
             velocity,
         };
-        let layer = CollisionLayers::new(GameLayer::Plasma, [GameLayer::Other]);
+        let memberships = LayerMask(GameLayer::Plasma as u32);
+        let filters = LayerMask::ALL & !memberships;
+        let layer = CollisionLayers {
+            memberships,
+            filters,
+        };
 
         let id = cmds.spawn((Plasma, missle, layer)).id();
         self.pew(cmds, assets);
