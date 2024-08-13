@@ -8,6 +8,7 @@ use rand_distr::Standard;
 use crate::assets::MyAssets;
 use crate::collide_dmg::CollisionDamage;
 use crate::health::cry_dead;
+use crate::health::Death;
 use crate::health::DeathCry;
 // use crate::collide::Collider;
 // use crate::collide::CollisionDamage;
@@ -129,20 +130,21 @@ fn random_unit_vec(rng: &mut impl Rng) -> Vec2 {
 
 fn split_dead(
     mut cmds: Commands,
-    q: Query<(&Health, &Transform, &LinearVelocity, &Astroid)>,
+    mut death_events: EventReader<Death>,
+    q: Query<(&Transform, &LinearVelocity, &Astroid)>,
     assets: Res<MyAssets>,
 ) {
-    for (health, &transform, &velocity, astriod) in q.iter() {
-        if **health > 0 {
+    for death in death_events.read() {
+        let Ok((&transform, &velocity, &astroid)) = q.get(**death) else {
             continue;
-        }
-        if astriod.bulk <= 1 {
+        };
+        if astroid.bulk <= 1 {
             continue;
         }
         let velicities = explode_veclocity(*velocity, 2);
         let shard = Astroid {
-            bulk: astriod.bulk / 2,
-            kind: astriod.kind,
+            bulk: astroid.bulk / 2,
+            kind: astroid.kind,
         };
         let particles = velicities.into_iter().map(|v| {
             let origin = transform.translation.truncate();
