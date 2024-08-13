@@ -7,6 +7,8 @@ use rand_distr::Standard;
 
 use crate::assets::MyAssets;
 use crate::collide_dmg::CollisionDamage;
+use crate::health::cry_dead;
+use crate::health::DeathCry;
 // use crate::collide::Collider;
 // use crate::collide::CollisionDamage;
 // use crate::collide::HomeMadeCollider;
@@ -20,7 +22,10 @@ pub struct AstriodPlug;
 
 impl Plugin for AstriodPlug {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, split_dead.in_set(InGameSet::Spawn));
+        app.add_systems(
+            Update,
+            (split_dead, cry_dead::<Astroid>).in_set(InGameSet::Spawn),
+        );
         // .add_systems(Update, despawn_astroid.in_set(InGameSet::Despawn))
         // .add_systems(
         //     Update,
@@ -148,11 +153,16 @@ fn split_dead(
             (spawn_coord, v)
         });
         shard.spawn(&assets, particles, &mut cmds);
+    }
+}
+
+impl DeathCry for Astroid {
+    fn cry(&self, assets: &MyAssets) -> AudioBundle {
         let sound = AudioBundle {
             source: assets.crack.clone(),
             settings: PlaybackSettings::DESPAWN,
         };
-        cmds.spawn(sound);
+        sound
     }
 }
 
