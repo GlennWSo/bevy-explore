@@ -2,7 +2,10 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
-    assets::MyAssets, collide_dmg::CollisionDamage, health::Health, schedule::InitStages,
+    assets::MyAssets,
+    collide_dmg::CollisionDamage,
+    health::{cry_dead, DeathCry, Health},
+    schedule::{InGameSet, InitStages},
     stage::Stage,
 };
 
@@ -11,6 +14,7 @@ pub struct SentryPlugin;
 impl Plugin for SentryPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, init_dbg_sentry.in_set(InitStages::Spawn));
+        app.add_systems(Update, cry_dead::<Sentry>.in_set(InGameSet::Spawn));
     }
 }
 
@@ -20,7 +24,18 @@ fn init_dbg_sentry(mut cmds: Commands, assets: Res<MyAssets>) {
     cmds.spawn(bundle);
 }
 
+#[derive(Component)]
 struct Sentry;
+
+impl DeathCry for Sentry {
+    fn cry(&self, assets: &MyAssets) -> AudioBundle {
+        let sound = AudioBundle {
+            source: assets.crack.clone(),
+            settings: PlaybackSettings::DESPAWN,
+        };
+        sound
+    }
+}
 
 impl Stage for Sentry {
     fn stage(self, assets: &Res<crate::assets::MyAssets>, transform: Transform) -> impl Bundle {
@@ -35,15 +50,13 @@ impl Stage for Sentry {
             ..default()
         };
         (
+            Sentry,
             model2d,
             RigidBody::Dynamic,
             ColliderDensity(6.),
             Collider::circle(2.5),
             CollisionDamage(1),
-            Health {
-                life: 50,
-                // death_cry: DeathCry::Pop,
-            },
+            Health { life: 50 },
         )
     }
 }
