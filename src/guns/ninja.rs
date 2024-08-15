@@ -110,14 +110,15 @@ fn handle_hook_release(
 fn stick_on_collide(
     mut cmds: Commands,
     // mut collision_event_reader: EventReader<CollisionStarted>,
-    q: Query<(Entity, &CollidingEntities, &Transform), (With<NinjaHook>, Without<Glue>)>,
+    hook_q: Query<(Entity, &CollidingEntities, &Transform), (With<NinjaHook>, Without<Glue>)>,
+    target_q: Query<(), Without<Sensor>>,
     player_q: Query<(Entity, &Transform), With<Player>>,
     assets: Res<MyAssets>,
 ) {
-    let Ok((hook_id, collisions, transform)) = q.get_single() else {
+    let Ok((hook_id, collisions, transform)) = hook_q.get_single() else {
         return;
     };
-    let Some(&other_entity) = collisions.iter().next() else {
+    let Some(&other_entity) = collisions.iter().find(|ent| target_q.get(**ent).is_ok()) else {
         return;
     };
     let glue_joint = FixedJoint::new(hook_id, other_entity);
