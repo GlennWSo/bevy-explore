@@ -50,20 +50,23 @@ fn init_dbg_sentry(mut cmds: Commands, assets: Res<MyAssets>) {
 }
 
 fn detect_threat(
-    sensor_q: Query<(&CollidingEntities, &Parent), With<Detector<SpaceShip>>>,
+    sensor_q: Query<(&CollidingEntities, &Position, &Rotation), With<Detector<SpaceShip>>>,
     threat_q: Query<&Transform, With<SpaceShip>>,
-    parrent_q: Query<&Transform>,
+    // parrent_q: Query<&Transform>,
 ) {
-    sensor_q.par_iter().for_each(|(threats, parrent)| {
-        for &threat in threats.iter() {
-            let Ok(transform) = threat_q.get(threat) else {
+    sensor_q.par_iter().for_each(|(collisions, pos, &rot)| {
+        for &threat in collisions.iter() {
+            let Ok(threat_transform) = threat_q.get(threat) else {
                 continue;
             };
-            let Ok(origin) = parrent_q.get(**parrent) else {
-                continue;
-            };
-            let linear_distance = transform.translation - origin.translation;
-            println!("Threat detected at {:?}", linear_distance);
+            let linear_distance = threat_transform.translation.truncate() - **pos;
+            let rads_to_east = linear_distance.y.atan2(linear_distance.x);
+            let relative_angle = rads_to_east - rot.as_radians();
+            println!("Threat detected at:");
+            println!("\trelative pos: {:?}", linear_distance);
+            println!("\trelative pos: {:?}", relative_angle.to_degrees());
+            // println!("\teast angle: {}", rads.to_degrees());
+            // println!("\trelative pos: {:?}", linear_distance);
         }
     });
 }
