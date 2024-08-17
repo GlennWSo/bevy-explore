@@ -29,7 +29,6 @@ impl Plugin for GunPlugin {
             cooldown_guns::<PlasmaGun>.in_set(InGameSet::EntityUpdate),
         )
         .add_systems(Update, handle_gun_fire::<PlasmaGun>)
-        .add_systems(Update, ship_weapon_ctrl.in_set(InGameSet::UI))
         .add_systems(Update, cry_dead::<Plasma>.in_set(InGameSet::Spawn))
         .add_systems(Update, despawn_far::<Plasma, 10_000>);
         app.add_event::<GunFireEvent<PlasmaGun>>();
@@ -56,42 +55,10 @@ pub trait FireCtrl {
 }
 
 #[derive(Event)]
-struct GunFireEvent<G: FireCtrl> {
-    phantom: PhantomData<G>,
-    entity: Entity,
-    origin: Transform,
-}
-
-fn ship_weapon_ctrl(
-    q: Query<(Entity, &Transform), With<Player>>,
-    mut plasa_events: EventWriter<GunFireEvent<PlasmaGun>>,
-    mut hook_events: EventWriter<GunFireEvent<NinjaGun>>,
-
-    btn_input: Res<ButtonInput<KeyCode>>,
-) {
-    let Ok((entity, ship_transform)) = q.get_single() else {
-        return;
-    };
-    let translation = ship_transform.translation - ship_transform.up() * FORWARD_OFFSET;
-    let mut origin = ship_transform.clone();
-    origin.scale = [1., 1., 1.].into();
-    origin.translation = translation;
-
-    if btn_input.pressed(KeyCode::Space) {
-        plasa_events.send(GunFireEvent {
-            entity,
-            origin,
-            phantom: PhantomData,
-        });
-    }
-    if btn_input.pressed(KeyCode::ControlLeft) {
-        hook_events.send(GunFireEvent {
-            entity,
-            origin,
-            phantom: PhantomData,
-        });
-        println!("Fire hook from: {}", entity);
-    }
+pub struct GunFireEvent<G: FireCtrl> {
+    pub phantom: PhantomData<G>,
+    pub entity: Entity,
+    pub transform: Transform,
 }
 
 trait SpawnMissle {
@@ -120,6 +87,7 @@ fn handle_gun_fire<G: Gun>(
         let Ok(res) = q.get_mut(event.entity) else {
             return;
         };
+        println!("FIRE");
         let (mut gun, ship_velocity, _) = res;
 
         let Some(_) = gun.fire() else {
@@ -128,7 +96,7 @@ fn handle_gun_fire<G: Gun>(
         gun.spawn_missle(
             &mut cmds,
             ship_velocity,
-            event.origin,
+            event.transform,
             &mut materials,
             &mut meshes,
             &assets,

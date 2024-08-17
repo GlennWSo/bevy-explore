@@ -1,4 +1,5 @@
 use std::f32::consts::PI;
+use std::marker::PhantomData;
 
 use avian2d::prelude::*;
 use bevy::color::palettes::css;
@@ -9,7 +10,7 @@ use bevy::sprite::MaterialMesh2dBundle;
 use crate::assets::MyAssets;
 use crate::collide_dmg::CollisionDamage;
 use crate::despawn::Keep;
-use crate::guns::{NinjaGun, PlasmaGun};
+use crate::guns::{GunFireEvent, NinjaGun, PlasmaGun};
 use crate::health::Health;
 use crate::schedule::InGameSet;
 use crate::state::GameState;
@@ -21,12 +22,14 @@ const SHIP_ROLL_SPEED: f32 = 2.5;
 const SHIP_HEALTH: i32 = 1000000;
 const SHIP_COLLISION_DAMAGE: i32 = 30;
 
+const FORWARD_OFFSET: f32 = 8.5;
 pub struct ShipPlug;
 
 impl Plugin for ShipPlug {
     fn build(&self, app: &mut App) {
         app.add_systems(PostStartup, spawn_spaceship);
         app.add_systems(OnExit(GameState::GameOver), spawn_spaceship);
+        app.add_systems(Update, ship_weapon_ctrl.in_set(InGameSet::UI));
         app.add_systems(
             Update,
             (ship_movement_ctrl, shield_ctrl).in_set(InGameSet::UI),
@@ -44,6 +47,37 @@ pub struct Player;
 #[derive(Component, Debug)]
 struct Shield;
 
+fn ship_weapon_ctrl(
+    q: Query<(Entity, &Transform), With<Player>>,
+    mut plasma_events: EventWriter<GunFireEvent<PlasmaGun>>,
+    mut hook_events: EventWriter<GunFireEvent<NinjaGun>>,
+
+    btn_input: Res<ButtonInput<KeyCode>>,
+) {
+    let Ok((entity, ship_transform)) = q.get_single() else {
+        return;
+    };
+    let translation = ship_transform.translation - *ship_transform.up() * FORWARD_OFFSET;
+    let mut origin = ship_transform.clone();
+    origin.scale = [1., 1., 1.].into();
+    origin.translation = translation;
+
+    if btn_input.pressed(KeyCode::Space) {
+        plasma_events.send(GunFireEvent {
+            entity,
+            transform: origin,
+            phantom: PhantomData,
+        });
+    }
+    if btn_input.pressed(KeyCode::ControlLeft) {
+        hook_events.send(GunFireEvent {
+            entity,
+            transform: origin,
+            phantom: PhantomData,
+        });
+        println!("Fire hook from: {}", entity);
+    }
+}
 fn shield_ctrl(
     mut cmds: Commands,
     q: Query<Entity, With<SpaceShip>>,
