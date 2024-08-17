@@ -5,21 +5,23 @@ use bevy::{prelude::*, tasks::ThreadExecutor};
 
 use crate::{
     assets::MyAssets,
+    astroids::Astroid,
     collide_dmg::CollisionDamage,
-    guns::{GunFireEvent, PlasmaGun},
+    guns::{GunFireEvent, Plasma, PlasmaGun},
     health::{cry_dead, DeathCry, Health},
     schedule::{InGameSet, InitStages},
-    ship::SpaceShip,
     stage::Stage,
 };
 
 pub struct SentryPlugin;
 
+type Target = Astroid;
+
 impl Plugin for SentryPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, init_dbg_sentry.in_set(InitStages::Spawn));
         app.add_systems(Update, cry_dead::<Sentry>.in_set(InGameSet::Spawn));
-        app.add_systems(Update, detect_threat::<SpaceShip>);
+        app.add_systems(Update, detect_threat::<Target>);
         app.add_systems(Update, rotate_sentry);
         app.add_event::<ThreatEvent>();
         app.add_systems(Update, fire_ctrl);
@@ -46,8 +48,8 @@ fn init_dbg_sentry(mut cmds: Commands, assets: Res<MyAssets>) {
     let transform = Transform::from_xyz(0., 30., 0.);
     let radius = 100.0;
     let collider = Collider::circle(radius);
-    let detector = Detector::<SpaceShip>::new();
-    let gun = PlasmaGun::default();
+    let detector = Detector::<Target>::new();
+    let gun = PlasmaGun::new(0.2);
     cmds.spawn((Sentry.stage(&assets, transform), gun))
         .with_children(|parrent| {
             parrent.spawn((detector, collider, Sensor));
