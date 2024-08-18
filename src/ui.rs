@@ -63,11 +63,30 @@ fn setup(mut commands: Commands) {
         ..default()
     };
     let forward_btn = (ForwardBtn, btn.clone());
+    let green_tint = Srgba::new(0., 0.5, 0., 0.1);
+    let red_tint = Srgba::new(0.5, 0., 0., 0.1);
     commands
         .ui_builder(UiRoot)
-        .column(|column| {
-            column.spawn(forward_btn);
+        .row(|root_row| {
+            root_row.column(|root_col| {
+                root_col
+                    .style()
+                    .background_color(red_tint.into())
+                    .height(Val::Percent(100.))
+                    .justify_self(JustifySelf::Center)
+                    .justify_content(JustifyContent::Center);
+                root_col.row(|cell| {
+                    cell.spawn(forward_btn);
+                    cell.style()
+                        .background_color(green_tint.into())
+                        // .width(Val::Percent(25.))
+                        .height(Val::Percent(25.));
+                });
+            });
         })
         .style()
+        .background_color(green_tint.into())
+        .height(Val::Percent(100.))
+        // .justify_items(JustifyItems::Center);
         .justify_content(JustifyContent::Center);
 }
