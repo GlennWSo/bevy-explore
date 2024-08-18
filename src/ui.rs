@@ -46,26 +46,26 @@ fn synthetic_keyboard(
 
 fn setup(mut commands: Commands) {
     // ui camera
+    let btn = ButtonBundle {
+        style: Style {
+            width: Val::Px(150.0),
+            height: Val::Px(65.0),
+            border: UiRect::all(Val::Px(5.0)),
+            // horizontally center child text
+            justify_content: JustifyContent::Center,
+            // vertically center child text
+            align_items: AlignItems::Center,
+            ..default()
+        },
+        border_color: BorderColor(Color::BLACK),
+        border_radius: BorderRadius::MAX,
+        // background_color: NORMAL_BUTTON.into(),
+        ..default()
+    };
+    let forward_btn = (ForwardBtn, btn.clone());
     commands
         .ui_builder(UiRoot)
         .column(|column| {
-            let btn = ButtonBundle {
-                style: Style {
-                    width: Val::Px(150.0),
-                    height: Val::Px(65.0),
-                    border: UiRect::all(Val::Px(5.0)),
-                    // horizontally center child text
-                    justify_content: JustifyContent::Center,
-                    // vertically center child text
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                border_color: BorderColor(Color::BLACK),
-                border_radius: BorderRadius::MAX,
-                // background_color: NORMAL_BUTTON.into(),
-                ..default()
-            };
-            let forward_btn = (ForwardBtn, btn.clone());
             column.spawn(forward_btn);
         })
         .style()
