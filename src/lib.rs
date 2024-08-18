@@ -14,6 +14,7 @@ pub mod sentry;
 pub mod ship;
 pub mod stage;
 pub mod state;
+pub mod ui;
 pub mod zones;
 
 use bevy::prelude::*;

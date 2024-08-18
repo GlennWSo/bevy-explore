@@ -21,6 +21,7 @@ rand_seeder = "0.2.*"
 rand_distr = "0.4.*"
 bevy-inspector-egui = "0.25.*"
 avian2d = "0.1.*"
+sickle_ui = "0.2.3"
 
 # dynamic_linking speeds builds alot but is best to remove before final release to enbale standalone 
 [target.x86_64-unknown-linux-gnu.dependencies]
