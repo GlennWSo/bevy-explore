@@ -171,7 +171,7 @@ fn spawn_spaceship(
         // derp,
         Player,
         SpaceShip,
-        PlasmaGun::new(0.07),
+        PlasmaGun::new(0.15),
         NinjaGun::default(),
         Keep,
         Health {
