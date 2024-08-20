@@ -40,7 +40,7 @@ fn main() {
         .add_plugins(GunPlugin)
         .add_plugins(DespawnPlugin)
         .add_plugins(ZonePlugin)
-        // .add_plugins(SentryPlugin)
+        .add_plugins(SentryPlugin)
         .add_plugins(UIPlugin)
         .add_plugins(CameraPlugin);
 
