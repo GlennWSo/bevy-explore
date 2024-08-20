@@ -73,7 +73,33 @@ fn setup(mut commands: Commands) {
                     .background_color(GREEN_TINT.into())
                     .height(Val::Percent(100.))
                     .justify_content(JustifyContent::Center);
-                left_col.spawn(button());
+                left_col
+                    .spawn((
+                        button(),
+                        SyntheticKey {
+                            key_code: KeyCode::Space,
+                            logical_key: Key::Space,
+                        },
+                    ))
+                    .spawn(TextBundle::from_section("Pew", btn_txt_style()));
+                left_col
+                    .spawn((
+                        button(),
+                        SyntheticKey {
+                            key_code: KeyCode::ControlLeft,
+                            logical_key: Key::Control,
+                        },
+                    ))
+                    .spawn(TextBundle::from_section("Hook", btn_txt_style()));
+                left_col
+                    .spawn((
+                        button(),
+                        SyntheticKey {
+                            key_code: KeyCode::Tab,
+                            logical_key: Key::Tab,
+                        },
+                    ))
+                    .spawn(TextBundle::from_section("reset", btn_txt_style()));
             });
             root_row.column(|right_col| {
                 right_col
