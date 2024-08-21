@@ -36,13 +36,13 @@ fn vinch_ctrl(
         return;
     };
 
-    let spooling = dbg!(if key_input.pressed(KeyCode::KeyW) {
+    let spooling = if key_input.pressed(KeyCode::KeyW) {
         -10.0
     } else if key_input.pressed(KeyCode::KeyS) {
         10.0
     } else {
         return;
-    });
+    };
 
     writer.send(VinchEvent { gun, spooling });
 }

@@ -1,3 +1,5 @@
+use std::borrow::BorrowMut;
+
 use crate::{schedule::InGameSet, Player};
 
 use super::{FireCtrl, GunFireEvent, MyAssets};
@@ -65,7 +67,7 @@ pub struct NinjaGun {
 
 #[derive(Component)]
 struct Glue {
-    on: Entity,
+    joint: Entity,
 }
 
 #[derive(Event)]
@@ -87,12 +89,16 @@ fn handle_hook_vinch(
 ) {
     let dt = time.delta_seconds();
     for event in reader.read() {
-        for joint in q.iter_mut() {
+        println!("vinch!");
+        for mut joint in q.iter_mut() {
+            println!("joint!");
             if joint.entity1 != event.gun {
                 continue;
             }
-            if let Some(mut limits) = joint.length_limits {
+            println!("match!");
+            if let Some(limits) = joint.length_limits.borrow_mut() {
                 limits.max += event.spooling * dt;
+                println!("limit reduced to: {}", limits.max);
             }
         }
     }
@@ -102,6 +108,7 @@ fn handle_hook_release(
     mut reader: EventReader<ReleaseHookEvent>,
     mut cmds: Commands,
     mut q: Query<&mut NinjaGun>,
+    q_glue: Query<&Glue>,
 ) {
     for ReleaseHookEvent { gun } in reader.read() {
         // gu
@@ -109,9 +116,12 @@ fn handle_hook_release(
         let mut ninja_gun = q.get_mut(*gun).unwrap();
         (*ninja_gun).state = NinjaState::Ready;
         let hook = (*ninja_gun).hook.take();
-        if let Some(hook) = hook {
-            cmds.entity(hook).despawn_recursive();
-        }
+        let Some(hook) = hook else { continue };
+        cmds.entity(hook).despawn_recursive();
+        let Ok(glue) = q_glue.get(hook) else {
+            continue;
+        };
+        cmds.entity(glue.joint).despawn_recursive();
     }
 }
 
@@ -131,9 +141,8 @@ fn stick_on_collide(
     };
     let glue_joint = FixedJoint::new(hook_id, other_entity);
     let glue_joint = cmds.spawn(glue_joint).id();
-    cmds.entity(hook_id)
-        .insert(Glue { on: other_entity })
-        .push_children(&[glue_joint]);
+    cmds.entity(hook_id).insert((Glue { joint: glue_joint }));
+    cmds.entity(hook_id).push_children(&[glue_joint]);
 
     let Ok(player) = player_q.get_single() else {
         return;
@@ -172,7 +181,7 @@ fn glue_break(
     mut writer: EventWriter<ReleaseHookEvent>,
 ) {
     for (glue, gun) in q.iter() {
-        if let Ok(_other) = q_glued2.get(glue.on) {
+        if let Ok(_other) = q_glued2.get(glue.joint) {
             continue;
         }
         writer.send(ReleaseHookEvent { gun: **gun });
