@@ -14,9 +14,7 @@ use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::collide_dmg::CollisionDamage;
 use crate::health::cry_dead;
-use crate::{
-    assets::MyAssets, despawn::despawn_far, health::Health, schedule::InGameSet, ship::Player,
-};
+use crate::{assets::MyAssets, despawn::despawn_far, health::Health, schedule::InGameSet};
 
 const FORWARD_OFFSET: f32 = 8.5;
 

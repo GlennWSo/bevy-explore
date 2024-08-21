@@ -1,6 +1,6 @@
 use std::borrow::BorrowMut;
 
-use crate::{collide_dmg::CollisionDamage, health::Health, schedule::InGameSet, ship::Player};
+use crate::{collide_dmg::CollisionDamage, health::Health, schedule::InGameSet, Player};
 
 use super::{handle_gun_fire, FireCtrl, GunFireEvent, MyAssets, SpawnMissle};
 

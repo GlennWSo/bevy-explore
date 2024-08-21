@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{health::Health, ship::Player, state::GameState};
+use crate::{health::Health, state::GameState, Player};
 
 /// used for marking entity to not be faraway removed
 #[derive(Component)]

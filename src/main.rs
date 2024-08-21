@@ -6,8 +6,8 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use learn_bevy::{
     assets::AssetPlug, astroids::AstriodPlug, camera::CameraPlugin,
     collide_dmg::CollideDamagePlugin, despawn::DespawnPlugin, guns::GunPlugin,
-    health::HealthPlugin, schedule::SchedulePlugin, sentry::SentryPlugin, ship::ShipPlug,
-    state::StatePlugin, ui::UIPlugin, zones::ZonePlugin,
+    health::HealthPlugin, keyboard::KeyboardPlugin, schedule::SchedulePlugin, sentry::SentryPlugin,
+    ship::ShipPlug, state::StatePlugin, ui::UIPlugin, zones::ZonePlugin,
 };
 
 fn main() {
@@ -42,6 +42,7 @@ fn main() {
         .add_plugins(ZonePlugin)
         .add_plugins(SentryPlugin)
         .add_plugins(UIPlugin)
+        .add_plugins(KeyboardPlugin)
         .add_plugins(CameraPlugin);
 
     app.run();

@@ -1,13 +1,8 @@
 use std::f32::consts::PI;
 use std::marker::PhantomData;
 
-use avian2d::parry::utils::hashmap::FxHasher32;
 use avian2d::prelude::*;
-use bevy::color::palettes::css;
 use bevy::prelude::*;
-use bevy::sprite::MaterialMesh2dBundle;
-use rand::thread_rng;
-// use bevy::input::InputSystem
 
 use crate::assets::MyAssets;
 use crate::collide_dmg::CollisionDamage;
@@ -16,26 +11,18 @@ use crate::guns::{GunFireEvent, NinjaGun, PlasmaGun};
 use crate::health::Health;
 use crate::schedule::InGameSet;
 use crate::state::GameState;
+use crate::Player;
 
-// const START_TRANSLATION: Vec3 = Vec3::new(0., 0., -20.);
-const SHIP_SPEED: f32 = 25.0;
-const SHIP_ROTATION_SPEED: f32 = 2.5;
-const SHIP_ROLL_SPEED: f32 = 2.5;
 const SHIP_HEALTH: i32 = 1000000;
 const SHIP_COLLISION_DAMAGE: i32 = 30;
 
-const FORWARD_OFFSET: f32 = 8.5;
 pub struct ShipPlug;
 
 impl Plugin for ShipPlug {
     fn build(&self, app: &mut App) {
         app.add_systems(PostStartup, spawn_player_ship);
         app.add_systems(OnExit(GameState::GameOver), spawn_player_ship);
-        app.add_systems(Update, ship_weapon_ctrl.in_set(InGameSet::UI));
-        app.add_systems(
-            Update,
-            (ship_movement_ctrl, shield_ctrl).in_set(InGameSet::UI),
-        );
+        app.add_systems(Update, shield_ctrl.in_set(InGameSet::UI));
         app.add_systems(Update, ship_manuver.in_set(InGameSet::EntityUpdate))
             .add_event::<ManuverEvent>()
             .add_systems(Update, end_player);
@@ -87,42 +74,13 @@ pub struct SpaceShip {
     mobility: Mobility,
 }
 
-#[derive(Component)]
-pub struct Player;
+impl SpaceShip {
+    pub const FORWARD_OFFSET: f32 = 8.5;
+}
 
 #[derive(Component, Debug)]
 struct Shield;
 
-fn ship_weapon_ctrl(
-    q: Query<(Entity, &Transform), With<Player>>,
-    mut plasma_events: EventWriter<GunFireEvent<PlasmaGun>>,
-    mut hook_events: EventWriter<GunFireEvent<NinjaGun>>,
-
-    btn_input: Res<ButtonInput<KeyCode>>,
-) {
-    let Ok((entity, ship_transform)) = q.get_single() else {
-        return;
-    };
-    let translation = ship_transform.translation - *ship_transform.up() * FORWARD_OFFSET;
-    let mut origin = ship_transform.clone();
-    origin.scale = [1., 1., 1.].into();
-    origin.translation = translation;
-
-    if btn_input.pressed(KeyCode::Space) {
-        plasma_events.send(GunFireEvent {
-            entity,
-            transform: origin,
-            phantom: PhantomData,
-        });
-    }
-    if btn_input.pressed(KeyCode::ControlLeft) {
-        hook_events.send(GunFireEvent {
-            entity,
-            transform: origin,
-            phantom: PhantomData,
-        });
-    }
-}
 fn shield_ctrl(
     mut cmds: Commands,
     q: Query<Entity, With<SpaceShip>>,
@@ -139,9 +97,9 @@ fn shield_ctrl(
 
 #[derive(Event)]
 pub struct ManuverEvent {
-    entity: Entity,
-    throttle: Vec2,
-    steering: f32,
+    pub entity: Entity,
+    pub throttle: Vec2,
+    pub steering: f32,
 }
 
 fn ship_manuver(
@@ -169,60 +127,12 @@ fn ship_manuver(
     }
 }
 
-// type ShipQuery = Query<(&mut Transform, &mut Velocity), With<SpaceShip>>;
-fn ship_movement_ctrl(
-    mut q: Query<Entity, (With<SpaceShip>, With<Player>)>,
-    mut reporter: EventWriter<ManuverEvent>,
-    key_input: Res<ButtonInput<KeyCode>>,
-) {
-    let Ok(ship) = q.get_single_mut() else {
-        return;
-    };
-
-    let mut forward = 0.0;
-    if key_input.pressed(KeyCode::ArrowDown) {
-        forward = -1.0;
-    } else if key_input.pressed(KeyCode::ArrowUp) {
-        forward = 1.0;
-    }
-
-    let mut strafe = 0.0;
-    if key_input.pressed(KeyCode::KeyQ) {
-        strafe = -1.0;
-    } else if key_input.pressed(KeyCode::KeyE) {
-        strafe = 1.0;
-    }
-
-    let mut steering = 0.0;
-    // steer left
-    if key_input.pressed(KeyCode::ArrowLeft) {
-        steering = -1.0;
-    } else if key_input.pressed(KeyCode::ArrowRight) {
-        steering = 1.0;
-    }
-
-    let any_input = (strafe != 0.0) || (forward != 0.0) || (steering != 0.0);
-    if any_input {
-        let throttle = Vec2 {
-            y: forward,
-            x: strafe,
-        };
-        reporter.send(ManuverEvent {
-            entity: ship,
-            throttle,
-            steering,
-        });
-    }
-}
-
 fn spawn_player_ship(
     mut cmds: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     assets: Res<MyAssets>,
 ) {
-    // transform.rotate_local_x(90.0f32.to_radians());
-    // transform.rotate_x(90.0f32.to_radians());
     let mut shape = Triangle2d::default();
     shape.vertices.iter_mut().for_each(|v| {
         v.y = -v.y;

@@ -1,17 +1,20 @@
-use crate::astroids::Rock;
-use crate::schedule::InitStages;
-use crate::ship::Player;
-use crate::ship::SpaceShip;
-use crate::stage::IntoMovingBundle;
 use std::ops::Add;
 
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+
 use rand::prelude::{Rng, SliceRandom};
 use rand_pcg::Pcg64;
 use rand_seeder::Seeder;
 
-use crate::{assets::MyAssets, astroids::Astroid, schedule::InGameSet};
+use crate::{
+    assets::MyAssets,
+    astroids::Astroid,
+    schedule::{InGameSet, InitStages},
+    ship::SpaceShip,
+    stage::IntoMovingBundle,
+    Player,
+};
 
 pub struct ZonePlugin;
 
