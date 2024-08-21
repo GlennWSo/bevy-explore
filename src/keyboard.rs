@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use bevy::prelude::*;
 
 use crate::{
-    guns::{GunFireEvent, NinjaGun, PlasmaGun, ReleaseHookEvent},
+    guns::{GunFireEvent, NinjaGun, PlasmaGun, ReleaseHookEvent, VinchEvent},
     schedule::InGameSet,
     ship::{ManuverEvent, SpaceShip},
     Player,
@@ -20,10 +20,31 @@ impl Plugin for KeyboardPlugin {
                 fire_ctrl_plasma,
                 ship_movement_ctrl,
                 ui_release_hook,
+                vinch_ctrl,
             )
                 .in_set(InGameSet::UI),
         );
     }
+}
+
+fn vinch_ctrl(
+    mut writer: EventWriter<VinchEvent>,
+    key_input: Res<ButtonInput<KeyCode>>,
+    q: Query<Entity, (With<Player>, With<NinjaGun>)>,
+) {
+    let Ok(gun) = q.get_single() else {
+        return;
+    };
+
+    let spooling = dbg!(if key_input.pressed(KeyCode::KeyW) {
+        -10.0
+    } else if key_input.pressed(KeyCode::KeyS) {
+        10.0
+    } else {
+        return;
+    });
+
+    writer.send(VinchEvent { gun, spooling });
 }
 
 fn ui_release_hook(

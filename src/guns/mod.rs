@@ -2,7 +2,7 @@ mod ninja;
 mod plasma;
 use self::ninja::NinjaPlugin;
 // use self::plasma::Plasma;
-pub use self::ninja::{NinjaGun, ReleaseHookEvent};
+pub use self::ninja::{NinjaGun, ReleaseHookEvent, VinchEvent};
 pub use self::plasma::{Plasma, PlasmaGun};
 
 use std::marker::PhantomData;

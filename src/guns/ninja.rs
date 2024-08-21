@@ -16,11 +16,12 @@ impl Plugin for NinjaPlugin {
         app.add_systems(Update, handle_hook_fire);
         app.add_event::<GunFireEvent<NinjaGun>>();
         app.add_event::<ReleaseHookEvent>();
+        app.add_event::<VinchEvent>();
         app.add_systems(Update, stick_on_collide.in_set(InGameSet::Spawn));
         app.add_systems(Update, handle_hook_release.in_set(InGameSet::Despawn));
         app.add_systems(
             Update,
-            (glue_break, remove_long_hook).in_set(InGameSet::EntityUpdate),
+            (glue_break, remove_long_hook, handle_hook_vinch).in_set(InGameSet::EntityUpdate),
         );
     }
 }
@@ -70,6 +71,31 @@ struct Glue {
 #[derive(Event)]
 pub struct ReleaseHookEvent {
     pub gun: Entity,
+}
+
+#[derive(Event)]
+pub struct VinchEvent {
+    pub gun: Entity,
+    /// m/s,  pull is negative
+    pub spooling: f32,
+}
+
+fn handle_hook_vinch(
+    mut reader: EventReader<VinchEvent>,
+    mut q: Query<&mut DistanceJoint>,
+    time: Res<Time>,
+) {
+    let dt = time.delta_seconds();
+    for event in reader.read() {
+        for joint in q.iter_mut() {
+            if joint.entity1 != event.gun {
+                continue;
+            }
+            if let Some(mut limits) = joint.length_limits {
+                limits.max += event.spooling * dt;
+            }
+        }
+    }
 }
 
 fn handle_hook_release(
