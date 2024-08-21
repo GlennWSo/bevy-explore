@@ -24,7 +24,6 @@ fn toggle_game_state(
     key_input: Res<ButtonInput<KeyCode>>,
 ) {
     if key_input.just_pressed(KeyCode::Escape) {
-        println!("key pressed");
         match state.get() {
             GameState::Play => next_state.set(GameState::Paused),
             GameState::Paused => next_state.set(GameState::Play),

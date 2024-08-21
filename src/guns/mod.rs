@@ -87,7 +87,6 @@ fn handle_gun_fire<G: Gun>(
         let Ok(res) = q.get_mut(event.entity) else {
             return;
         };
-        println!("FIRE");
         let (mut gun, ship_velocity, _) = res;
 
         let Some(_) = gun.fire() else {

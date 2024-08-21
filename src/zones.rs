@@ -267,7 +267,6 @@ impl Zones {
 fn init_zone(mut cmds: Commands, mut zones: ResMut<Zones>, assets: Res<MyAssets>) {
     let zone: Zone = [0, 0].into();
     let pop: Population = zone.into();
-    // println!("init pop: {:#?}", pop);
     let coords = zone
         .rand_coordinates()
         .filter(|coord| coord.distance(Vec2::ZERO) > 30.0);

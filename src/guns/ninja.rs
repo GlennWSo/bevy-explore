@@ -152,7 +152,6 @@ fn remove_long_hook(
             .translation
             .distance(gun_transform.translation);
         if distance > max_dist {
-            println!("hook out of bounds");
             writer.send(ReleaseHookEvent { gun: **gun_id });
         }
     }
@@ -215,7 +214,6 @@ impl NinjaGun {
         meshes: &mut ResMut<Assets<Mesh>>,
         assets: &Res<MyAssets>,
     ) {
-        println!("spawning hook");
         let radius = 0.5;
         let length = 2.;
         let shape = Capsule2d::new(radius, length);

@@ -75,7 +75,6 @@ fn ship_weapon_ctrl(
             transform: origin,
             phantom: PhantomData,
         });
-        println!("Fire hook from: {}", entity);
     }
 }
 fn shield_ctrl(

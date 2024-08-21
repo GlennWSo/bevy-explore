@@ -56,8 +56,6 @@ fn synthetic_keyboard(
             state,
             window,
         };
-        println!("{:?}", btn);
-        println!("key event:{:?}", key_event);
         writer.send(key_event);
     }
 }

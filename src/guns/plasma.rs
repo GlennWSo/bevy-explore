@@ -123,8 +123,8 @@ impl SpawnMissle for PlasmaGun {
             damage: CollisionDamage(Plasma::DAMAGE),
             velocity,
         };
-        let memberships = dbg!(LayerMask(GameLayer::Plasma.to_bits()));
-        let filters = dbg!(LayerMask::ALL & !memberships);
+        let memberships = LayerMask(GameLayer::Plasma.to_bits());
+        let filters = LayerMask::ALL & !memberships;
         let layer = CollisionLayers {
             memberships,
             filters,

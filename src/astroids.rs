@@ -214,7 +214,6 @@ impl Stage for Astroid {
         // let mesh = Mesh2dHandle(assets.ball.clone());
 
         // let texture = assets.astriod.clone();
-        println!("{:?}", self.kind);
         let texture = match self.kind {
             Rock::Stone => assets.astriod.clone(),
             Rock::Ice => assets.astriod2.clone(),
