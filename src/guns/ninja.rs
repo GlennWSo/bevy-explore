@@ -19,7 +19,6 @@ impl Plugin for NinjaPlugin {
         app.add_event::<GunFireEvent<NinjaGun>>();
         app.add_event::<ReleaseHookEvent>();
         app.add_systems(Update, stick_on_collide.in_set(InGameSet::Spawn));
-        app.add_systems(Update, ui_release_hook.in_set(InGameSet::UI));
         app.add_systems(Update, handle_hook_release.in_set(InGameSet::Despawn));
         app.add_systems(
             Update,
@@ -71,23 +70,8 @@ struct Glue {
 }
 
 #[derive(Event)]
-struct ReleaseHookEvent {
-    gun: Entity,
-}
-
-fn ui_release_hook(
-    mut writer: EventWriter<ReleaseHookEvent>,
-    btn_input: Res<ButtonInput<KeyCode>>,
-    q: Query<(Entity), (With<Player>, With<NinjaGun>)>,
-) {
-    if !btn_input.pressed(KeyCode::Tab) {
-        return;
-    }
-
-    let Ok(gun) = q.get_single() else {
-        return;
-    };
-    writer.send(ReleaseHookEvent { gun });
+pub struct ReleaseHookEvent {
+    pub gun: Entity,
 }
 
 fn handle_hook_release(

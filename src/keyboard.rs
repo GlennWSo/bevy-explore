@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use bevy::prelude::*;
 
 use crate::{
-    guns::{GunFireEvent, NinjaGun, PlasmaGun},
+    guns::{GunFireEvent, NinjaGun, PlasmaGun, ReleaseHookEvent},
     schedule::InGameSet,
     ship::{ManuverEvent, SpaceShip},
     Player,
@@ -15,9 +15,24 @@ impl Plugin for KeyboardPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (ship_gun_ctrl, ship_movement_ctrl).in_set(InGameSet::UI),
+            (ship_gun_ctrl, ship_movement_ctrl, ui_release_hook).in_set(InGameSet::UI),
         );
     }
+}
+
+fn ui_release_hook(
+    mut writer: EventWriter<ReleaseHookEvent>,
+    btn_input: Res<ButtonInput<KeyCode>>,
+    q: Query<(Entity), (With<Player>, With<NinjaGun>)>,
+) {
+    if !btn_input.pressed(KeyCode::Tab) {
+        return;
+    }
+
+    let Ok(gun) = q.get_single() else {
+        return;
+    };
+    writer.send(ReleaseHookEvent { gun });
 }
 
 fn ship_gun_ctrl(
