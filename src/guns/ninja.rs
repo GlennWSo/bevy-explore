@@ -151,7 +151,9 @@ fn stick_on_collide(
     let joint = DistanceJoint::new(player.0, hook_id)
         .with_limits(0.0, distance)
         .with_compliance(1e-2);
-    cmds.spawn(joint);
+    let distance_joint = cmds.spawn(joint).id();
+    cmds.entity(hook_id).push_children(&[distance_joint]);
+
     NinjaHook::impact_sound(&mut cmds, &assets);
 }
 
