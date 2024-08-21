@@ -15,7 +15,13 @@ impl Plugin for KeyboardPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (ship_gun_ctrl, ship_movement_ctrl, ui_release_hook).in_set(InGameSet::UI),
+            (
+                fire_ctrl_hook,
+                fire_ctrl_plasma,
+                ship_movement_ctrl,
+                ui_release_hook,
+            )
+                .in_set(InGameSet::UI),
         );
     }
 }
@@ -23,7 +29,7 @@ impl Plugin for KeyboardPlugin {
 fn ui_release_hook(
     mut writer: EventWriter<ReleaseHookEvent>,
     btn_input: Res<ButtonInput<KeyCode>>,
-    q: Query<(Entity), (With<Player>, With<NinjaGun>)>,
+    q: Query<Entity, (With<Player>, With<NinjaGun>)>,
 ) {
     if !btn_input.pressed(KeyCode::Tab) {
         return;
@@ -35,11 +41,9 @@ fn ui_release_hook(
     writer.send(ReleaseHookEvent { gun });
 }
 
-fn ship_gun_ctrl(
+fn fire_ctrl_plasma(
     q: Query<(Entity, &Transform), (With<Player>, With<SpaceShip>)>,
     mut plasma_events: EventWriter<GunFireEvent<PlasmaGun>>,
-    mut hook_events: EventWriter<GunFireEvent<NinjaGun>>,
-
     btn_input: Res<ButtonInput<KeyCode>>,
 ) {
     let Ok((entity, ship_transform)) = q.get_single() else {
@@ -57,15 +61,8 @@ fn ship_gun_ctrl(
             phantom: PhantomData,
         });
     }
-    if btn_input.pressed(KeyCode::ControlLeft) {
-        hook_events.send(GunFireEvent {
-            entity,
-            transform: origin,
-            phantom: PhantomData,
-        });
-    }
 }
-fn ship_hook_ctrl(
+fn fire_ctrl_hook(
     q: Query<(Entity, &Transform), (With<Player>, With<SpaceShip>)>,
     mut hook_events: EventWriter<GunFireEvent<NinjaGun>>,
 

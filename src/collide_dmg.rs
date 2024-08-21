@@ -1,7 +1,7 @@
 use avian2d::prelude::*;
 use bevy::{ecs::query::QueryFilter, prelude::*};
 
-use crate::{guns::Plasma, health::Health};
+use crate::health::Health;
 
 pub struct CollideDamagePlugin;
 

@@ -1,8 +1,6 @@
-use std::borrow::BorrowMut;
+use crate::{schedule::InGameSet, Player};
 
-use crate::{collide_dmg::CollisionDamage, health::Health, schedule::InGameSet, Player};
-
-use super::{handle_gun_fire, FireCtrl, GunFireEvent, MyAssets, SpawnMissle};
+use super::{FireCtrl, GunFireEvent, MyAssets};
 
 use avian2d::prelude::*;
 use bevy::{
@@ -169,13 +167,13 @@ impl FireCtrl for NinjaGun {
         res
     }
 
-    fn cooldown(&mut self, dt: f32) {
+    fn cooldown(&mut self, _dt: f32) {
         todo!()
     }
 }
 
 #[derive(Component, Deref, DerefMut)]
-struct FromGun(Entity);
+pub struct FromGun(pub Entity);
 
 #[derive(Bundle)]
 pub struct HookBundle<M: Material2d> {

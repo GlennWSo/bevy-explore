@@ -16,8 +16,6 @@ use crate::collide_dmg::CollisionDamage;
 use crate::health::cry_dead;
 use crate::{assets::MyAssets, despawn::despawn_far, health::Health, schedule::InGameSet};
 
-const FORWARD_OFFSET: f32 = 8.5;
-
 pub struct GunPlugin;
 
 impl Plugin for GunPlugin {
