@@ -1,10 +1,12 @@
 use std::f32::consts::PI;
 use std::marker::PhantomData;
 
+use avian2d::parry::utils::hashmap::FxHasher32;
 use avian2d::prelude::*;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
+use rand::thread_rng;
 // use bevy::input::InputSystem
 
 use crate::assets::MyAssets;
@@ -27,19 +29,63 @@ pub struct ShipPlug;
 
 impl Plugin for ShipPlug {
     fn build(&self, app: &mut App) {
-        app.add_systems(PostStartup, spawn_spaceship);
-        app.add_systems(OnExit(GameState::GameOver), spawn_spaceship);
+        app.add_systems(PostStartup, spawn_player_ship);
+        app.add_systems(OnExit(GameState::GameOver), spawn_player_ship);
         app.add_systems(Update, ship_weapon_ctrl.in_set(InGameSet::UI));
         app.add_systems(
             Update,
             (ship_movement_ctrl, shield_ctrl).in_set(InGameSet::UI),
-        )
-        .add_systems(Update, end_player);
+        );
+        app.add_systems(Update, ship_manuver.in_set(InGameSet::EntityUpdate))
+            .add_event::<ManuverEvent>()
+            .add_systems(Update, end_player);
     }
 }
 
-#[derive(Component)]
-pub struct SpaceShip;
+struct Mobility {
+    /// m/s^2
+    forward: f32,
+    /// m/s^2
+    reverse: f32,
+    /// m/s^2
+    strafe: f32,
+    /// rad/s
+    rotation: f32,
+}
+
+impl Mobility {
+    /// calculate acceleration given throttle input
+    fn accelerate(&self, throttle: &Vec2) -> Vec2 {
+        let x = self.strafe * throttle.x;
+        let factor = if throttle.y.is_sign_positive() {
+            self.forward
+        } else {
+            self.reverse
+        };
+        let y = factor * throttle.y;
+        Vec2 { x, y }
+    }
+}
+
+impl Default for Mobility {
+    fn default() -> Self {
+        let forward = 25.0;
+        let reverse = 10.0;
+        let strafe = 15.0;
+        let rotation = 2.5;
+        Mobility {
+            forward,
+            reverse,
+            strafe,
+            rotation,
+        }
+    }
+}
+
+#[derive(Component, Default)]
+pub struct SpaceShip {
+    mobility: Mobility,
+}
 
 #[derive(Component)]
 pub struct Player;
@@ -91,45 +137,85 @@ fn shield_ctrl(
     }
 }
 
-// type ShipQuery = Query<(&mut Transform, &mut Velocity), With<SpaceShip>>;
-fn ship_movement_ctrl(
-    mut q: Query<(&mut Transform, &mut LinearVelocity), With<SpaceShip>>,
-    key_input: Res<ButtonInput<KeyCode>>,
+#[derive(Event)]
+pub struct ManuverEvent {
+    entity: Entity,
+    throttle: Vec2,
+    steering: f32,
+}
+
+fn ship_manuver(
+    mut q: Query<(&mut SpaceShip, &mut LinearVelocity, &mut Transform)>,
+    mut reader: EventReader<ManuverEvent>,
     time: Res<Time>,
 ) {
-    let Ok((mut transform, mut velocity)) = q.get_single_mut() else {
+    let dt = time.delta_seconds();
+    for ManuverEvent {
+        entity,
+        throttle,
+        steering,
+    } in reader.read()
+    {
+        let Ok((ship, mut velocity, mut transform)) = q.get_mut(*entity) else {
+            continue;
+        };
+        let local_diff = dt * -ship.mobility.accelerate(throttle);
+        let up = transform.up().truncate();
+        let right: Vec2 = [up.y, -up.x].into();
+        let y_diff = local_diff.y * up;
+        let x_diff = local_diff.x * right;
+        velocity.0 += x_diff + y_diff;
+        transform.rotate_z(*steering * dt * -ship.mobility.rotation);
+    }
+}
+
+// type ShipQuery = Query<(&mut Transform, &mut Velocity), With<SpaceShip>>;
+fn ship_movement_ctrl(
+    mut q: Query<Entity, (With<SpaceShip>, With<Player>)>,
+    mut reporter: EventWriter<ManuverEvent>,
+    key_input: Res<ButtonInput<KeyCode>>,
+) {
+    let Ok(ship) = q.get_single_mut() else {
         return;
     };
 
-    let mut movement = 0.0;
+    let mut forward = 0.0;
     if key_input.pressed(KeyCode::ArrowDown) {
-        movement = -SHIP_SPEED;
+        forward = -1.0;
     } else if key_input.pressed(KeyCode::ArrowUp) {
-        movement = SHIP_SPEED;
+        forward = 1.0;
     }
 
-    let mut rotation = 0.0;
+    let mut strafe = 0.0;
+    if key_input.pressed(KeyCode::KeyQ) {
+        strafe = -1.0;
+    } else if key_input.pressed(KeyCode::KeyE) {
+        strafe = 1.0;
+    }
+
+    let mut steering = 0.0;
+    // steer left
     if key_input.pressed(KeyCode::ArrowLeft) {
-        rotation = SHIP_ROTATION_SPEED;
+        steering = -1.0;
     } else if key_input.pressed(KeyCode::ArrowRight) {
-        rotation = -SHIP_ROLL_SPEED;
+        steering = 1.0;
     }
 
-    let mut roll = 0.0;
-    if key_input.pressed(KeyCode::KeyA) {
-        roll = SHIP_ROLL_SPEED;
-    } else if key_input.pressed(KeyCode::KeyD) {
-        roll = -SHIP_ROLL_SPEED;
+    let any_input = (strafe != 0.0) || (forward != 0.0) || (steering != 0.0);
+    if any_input {
+        let throttle = Vec2 {
+            y: forward,
+            x: strafe,
+        };
+        reporter.send(ManuverEvent {
+            entity: ship,
+            throttle,
+            steering,
+        });
     }
-
-    let dt = time.delta_seconds();
-    transform.rotate_z(rotation * dt);
-    transform.rotate_local_y(-roll * dt);
-
-    velocity.0 += -(transform.up()).truncate() * movement * dt;
 }
 
-fn spawn_spaceship(
+fn spawn_player_ship(
     mut cmds: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -156,20 +242,17 @@ fn spawn_spaceship(
         ..default()
     };
 
-    // let derp = HomeMadeCollider::new(4.0);
     let collider: Collider = shape.into();
     let mut camera = Camera2dBundle::default();
     camera.transform.rotate_z(180.0_f32.to_radians());
     camera.projection.scale = 0.1;
     let ship = (
-        // Velocity::default(),
         RigidBody::Dynamic,
         LockedAxes::ROTATION_LOCKED,
         model2d,
         collider,
-        // derp,
         Player,
-        SpaceShip,
+        SpaceShip::default(),
         PlasmaGun::new(0.15),
         NinjaGun::default(),
         Keep,
